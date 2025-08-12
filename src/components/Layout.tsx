@@ -111,22 +111,6 @@ const Layout: React.FC<LayoutProps> = ({ children, userEmail, onLogout }) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Interview</h2>
-              <p className="text-sm text-gray-600">Complete your interview with our AI assistant</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-1 text-xs text-gray-500">
-                <User size={14} />
-                <span>Candidate Portal</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Content */}
         <div className="flex-1 p-6 overflow-y-auto">{children}</div>
       </div>
