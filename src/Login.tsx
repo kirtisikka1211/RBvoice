@@ -53,25 +53,23 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo and Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Bot size={40} className="text-white" />
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md" style={{ backgroundColor: 'rgb(43, 94, 161)' }}>
+            <Bot size={28} className="text-white" />
           </div>
-          {/* <h1 className="text-3xl font-bold text-gray-900 mb-2">RecruitmentBricks</h1>
-          <p className="text-gray-600">AI-Powered Interview Platform</p> */}
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Welcome Back</h2>
-            <p className="text-gray-600">Sign in to access your interview</p>
+        <div className="bg-white rounded-xl shadow-xl border border-gray-200 p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">Welcome Back</h2>
+            <p className="text-sm text-gray-600">Sign in to access your interview</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -79,7 +77,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User size={18} className="text-gray-400" />
+                  <User size={16} className="text-gray-400" />
                 </div>
                 <input
                   type="email"
@@ -87,7 +85,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  className={`w-full pl-9 pr-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
                     errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter your email"
@@ -106,7 +104,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock size={18} className="text-gray-400" />
+                  <Lock size={16} className="text-gray-400" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -114,7 +112,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  className={`w-full pl-9 pr-10 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
                     errors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter your password"
@@ -127,9 +125,9 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff size={18} className="text-gray-400 hover:text-gray-600" />
+                    <EyeOff size={16} className="text-gray-400 hover:text-gray-600" />
                   ) : (
-                    <Eye size={18} className="text-gray-400 hover:text-gray-600" />
+                    <Eye size={16} className="text-gray-400 hover:text-gray-600" />
                   )}
                 </button>
               </div>
@@ -163,7 +161,10 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed"
+              className="w-full text-white font-medium py-2.5 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ backgroundColor: 'rgb(43, 94, 161)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgb(43, 94, 161)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgb(43, 94, 161)' }}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -177,7 +178,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
           </form>
 
           {/* Help Links */}
-          <div className="mt-6 text-center">
+          <div className="mt-5 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
               <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
@@ -187,7 +188,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
           </div>
 
           {/* Footer Links */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t border-gray-200">
             <div className="text-center">
               <p className="text-xs text-gray-500 mb-3">Need help?</p>
               <div className="flex justify-center space-x-4 text-sm">
@@ -203,7 +204,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
 
         {/* Copyright */}
         <div className="text-center mt-6 text-xs text-gray-500">
-          © 2025 RecruitmentBricks. All rights reserved.
+          © 2025 RBvoice. All rights reserved.
         </div>
       </div>
     </div>
