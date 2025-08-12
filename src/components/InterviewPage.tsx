@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mic, 
   MicOff, 
   Bot, 
   Clock, 
   CheckCircle, 
-  Volume2 
+  Volume2,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Pause,
+  Play,
+  SkipForward,
+  Settings,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +23,14 @@ interface InterviewQuestion {
   question: string;
   answer?: string;
   duration?: number;
+}
+
+interface ChatMessage {
+  id: string;
+  type: 'bot' | 'user' | 'system';
+  content: string;
+  timestamp: Date;
+  status?: 'sending' | 'sent' | 'error';
 }
 
 interface InterviewPageProps {
@@ -29,22 +46,59 @@ const mockQuestions: InterviewQuestion[] = [
   { id: 5, question: "Where do you see yourself professionally in the next 3-5 years?" }
 ];
 
+// Exactly 5 mock answers mapped 1:1 to the 5 questions above
+const mockAnswers: string[] = [
+  "My name is John Doe. I have five years of experience as a full‑stack developer, working primarily with React and Node.js, and I enjoy building reliable products end‑to‑end.",
+  "I'm excited about this role because it combines user impact with technical depth. Your product focus on accessibility and performance aligns with how I like to build software.",
+  "Recently, I led a migration to a new authentication system under a tight deadline. I broke the project into phases, wrote automated tests, and coordinated with stakeholders to ensure a smooth rollout.",
+  "I prioritize, communicate trade‑offs, and focus on incremental delivery. I set short timeboxes, remove blockers early, and keep the team aligned on the next most valuable step.",
+  "I see myself as a senior engineer mentoring others, owning key domains, and continuing to ship user‑centric features while improving system reliability."
+];
+
+const getMockAnswer = (index: number): string => mockAnswers[index] ?? '';
+
 const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) => {
   const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [interviewDuration, setInterviewDuration] = useState(0);
-  const [currentQuestionText, setCurrentQuestionText] = useState(mockQuestions[0].question);
+  const [timeRemaining, setTimeRemaining] = useState(1200); // 20 minutes in seconds
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Initialize with bot greeting
+    setChatMessages([
+      {
+        id: '1',
+        type: 'bot',
+        content: "Hello! I'm your AI interviewer. I'll be asking you a few questions to understand your background and experience. Let's start with the first question. What is your name?",
+        timestamp: new Date(),
+        status: 'sent'
+      }
+    ]);
+
     let interval: NodeJS.Timeout;
     if (isRecording) {
       interval = setInterval(() => {
-        setInterviewDuration(prev => prev + 1);
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            // Time's up - auto complete interview
+            completeInterview();
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
   }, [isRecording]);
+
+  useEffect(() => {
+    // Auto-scroll to bottom when new messages arrive
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, liveTranscript]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -54,12 +108,48 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
 
   const toggleRecording = () => {
     setIsRecording(!isRecording);
+    if (!isRecording) {
+      // Simulate live transcription for the current question
+      setLiveTranscript(getMockAnswer(currentQuestion));
+    } else {
+      setLiveTranscript('');
+    }
+  };
+
+  const repeatQuestion = () => {
+    setChatMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      type: 'bot',
+      content: mockQuestions[currentQuestion].question,
+      timestamp: new Date(),
+      status: 'sent'
+    }]);
   };
 
   const nextQuestion = () => {
+    if (liveTranscript.trim()) {
+      // Save current answer
+      setChatMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        type: 'user',
+        content: liveTranscript,
+        timestamp: new Date(),
+        status: 'sent'
+      }]);
+      setLiveTranscript('');
+    }
+
     if (currentQuestion < mockQuestions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-      setCurrentQuestionText(mockQuestions[currentQuestion + 1].question);
+      const nextIndex = currentQuestion + 1;
+      setCurrentQuestion(nextIndex);
+      // Add next question
+      setChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: mockQuestions[nextIndex].question,
+        timestamp: new Date(),
+        status: 'sent'
+      }]);
     } else {
       completeInterview();
     }
@@ -68,15 +158,15 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
   const completeInterview = () => {
     setIsRecording(false);
     
-    // Generate mock interview script
+    // Generate script with exactly 5 mock Q&A mapped to questions
     const script = {
       questions: mockQuestions.map((q, index) => ({
         ...q,
-        answer: `This is a mock answer for question ${index + 1}. In a real implementation, this would contain the candidate's actual response recorded during the interview.`,
-        duration: Math.floor(Math.random() * 120) + 30 // Random duration between 30-150 seconds
+        answer: getMockAnswer(index),
+        duration: Math.floor(Math.random() * 120) + 30
       })),
-      totalDuration: interviewDuration,
-      feedback: "Strong communication skills demonstrated throughout the interview. Good technical knowledge and problem-solving approach. Consider highlighting specific examples of leadership experience in future interviews.",
+      totalDuration: 1200 - timeRemaining, // Time used
+      feedback: "Strong communication skills demonstrated throughout the interview. Good technical knowledge and problem-solving approach.",
       timestamp: new Date().toLocaleString()
     };
     
@@ -84,110 +174,133 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
     navigate('/interview/completed');
   };
 
+  const getMicButtonState = () => {
+    if (isRecording) return 'recording';
+    return 'idle';
+  };
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Interview Panel */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Bot size={16} className="text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">AI Interviewer</h3>
-                  <p className="text-xs text-gray-500">
-                    {isRecording ? 'Speaking...' : 'Paused'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Clock size={14} className="text-gray-400" />
-                <span className="text-xs text-gray-600">{formatTime(interviewDuration)}</span>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <div className="flex items-start space-x-2">
-                <Volume2 size={16} className="text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 mb-1">
-                    Question {currentQuestion + 1} of {mockQuestions.length}
-                  </p>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {currentQuestionText}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center space-x-3">
-              <button
-                onClick={toggleRecording}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                  isRecording 
-                    ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-                }`}
-              >
-                {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
-              </button>
-              
-              <button
-                onClick={nextQuestion}
-                className="px-4 py-2 bg-[#2B5EA1] hover:bg-[#244E85] text-white rounded-lg font-medium transition-colors text-sm"
-              >
-                {currentQuestion < mockQuestions.length - 1 ? 'Next Question' : 'Complete Interview'}
-              </button>
-            </div>
+    <div className="h-full flex flex-col">
+      {/* Timer Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Clock size={16} className="text-gray-500" />
+            <span className="text-sm text-gray-600">Time remaining:</span>
+            <span className={`font-medium ${timeRemaining <= 300 ? 'text-red-600' : 'text-gray-900'}`}>
+              {formatTime(timeRemaining)}
+            </span>
           </div>
-        </div>
-
-        {/* Progress Panel */}
-        <div className="space-y-3">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            <h4 className="font-medium text-gray-900 mb-2">Progress</h4>
-            <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">Question {currentQuestion + 1} of {mockQuestions.length}</span>
+            <div className="flex items-center space-x-1">
               {mockQuestions.map((_, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                    index < currentQuestion ? 'bg-green-100 text-green-600' :
-                    index === currentQuestion ? 'bg-blue-100 text-blue-600' :
-                    'bg-gray-100 text-gray-400'
-                  }`}>
-                    {index < currentQuestion ? <CheckCircle size={12} /> : index + 1}
-                  </div>
-                  <span className={`text-xs ${
-                    index <= currentQuestion ? 'text-gray-900' : 'text-gray-400'
-                  }`}>
-                    Question {index + 1}
-                  </span>
-                </div>
+                <div key={index} className={`w-2 h-2 rounded-full ${
+                  index < currentQuestion ? 'bg-green-500' :
+                  index === currentQuestion ? 'bg-blue-500' :
+                  'bg-gray-300'
+                }`} />
               ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            <h4 className="font-medium text-gray-900 mb-2">Interview Stats</h4>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-600">Duration</span>
-                <span className="text-gray-900 font-medium">{formatTime(interviewDuration)}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-600">Questions</span>
-                <span className="text-gray-900 font-medium">{currentQuestion + 1}/{mockQuestions.length}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-600">Status</span>
-                <span className={`font-medium ${
-                  isRecording ? 'text-green-600' : 'text-yellow-600'
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {chatMessages.map((message) => (
+            <div key={message.id} className={`flex ${message.type === 'bot' ? 'justify-start' : 'justify-end'}`}>
+              <div className={`flex items-start gap-3 max-w-3xl ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  message.type === 'bot' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {isRecording ? 'Recording' : 'Paused'}
-                </span>
+                  {message.type === 'bot' ? <Bot size={16} /> : '👤'}
+                </div>
+                <div className={`rounded-xl px-4 py-3 shadow-sm ${
+                  message.type === 'bot' 
+                    ? 'bg-white border border-gray-200' 
+                    : 'bg-[#2B5EA1] text-white'
+                }`}>
+                  {message.type === 'bot' && (
+                    <div className="text-xs text-gray-500 mb-1">AI Interviewer</div>
+                  )}
+                  <p className="text-sm leading-relaxed">{message.content}</p>
+                </div>
               </div>
             </div>
+          ))}
+          
+          {/* Live Transcript */}
+          {liveTranscript && (
+            <div className="flex justify-end">
+              <div className="flex items-start gap-3 max-w-3xl flex-row-reverse">
+                <div className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  👤
+                </div>
+                <div className="bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
+                  <div className="text-xs text-gray-500 mb-1">Typing...</div>
+                  <p className="text-sm leading-relaxed text-gray-700">{liveTranscript}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* System Messages */}
+          {connectionStatus === 'disconnected' && (
+            <div className="flex justify-center">
+              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-sm text-red-800 flex items-center gap-2">
+                <WifiOff size={14} />
+                Connection lost
+              </div>
+            </div>
+          )}
+
+          <div ref={chatEndRef} />
+        </div>
+      </div>
+
+      {/* Sticky Recorder Dock */}
+      <div className="border-t border-gray-200 bg-white px-4 py-3">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {/* Mic Button */}
+            <button
+              onClick={toggleRecording}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                getMicButtonState() === 'recording' 
+                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                  : 'bg-[#2B5EA1] hover:bg-[#244E85] text-white'
+              }`}
+            >
+              <Mic size={20} />
+            </button>
+
+            {/* Status */}
+            <div className="text-sm text-gray-600">
+              {getMicButtonState() === 'recording' && 'Recording...'}
+              {getMicButtonState() === 'idle' && 'Click to start'}
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={repeatQuestion}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Repeat question"
+            >
+              <RotateCcw size={16} />
+            </button>
+
+            <button
+              onClick={nextQuestion}
+              className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
+            >
+              <SkipForward size={16} />
+              <span>{currentQuestion < mockQuestions.length - 1 ? 'Next' : 'Complete'}</span>
+            </button>
           </div>
         </div>
       </div>

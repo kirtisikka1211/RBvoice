@@ -69,7 +69,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ userEmail }) => {
                 {expandedTask === 'interview' && (
                   <div className="border-t border-gray-200 p-6 bg-gray-50">
                     <div className="space-y-4">
-                      
+                      {/* <p className="text-gray-700 text-base leading-relaxed">
+                        Make sure you are in a quiet place with a stable internet connection. You can pause between
+                        questions. Your responses help us personalize the evaluation and speed up the process.
+                      </p> */}
                       <div className="flex items-center space-x-3 text-base text-gray-600">
                         <Calendar size={18} className="text-blue-600" />
                         <span>3 day validity of link</span>
@@ -133,8 +136,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ userEmail }) => {
               </div>
 
               {/* Tips / Reduce vacancy */}
-              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-lg border border-gray-200 p-4"> */}
-                {/* <div className="flex items-start space-x-3">
+              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-start space-x-3">
                   <CheckCircle size={18} className="text-green-600 mt-0.5" />
                   <div>
                     <div className="font-medium text-gray-900">Quiet environment</div>
@@ -153,11 +156,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ userEmail }) => {
                   <div>
                     <div className="font-medium text-gray-900">Working microphone</div>
                     <div className="text-sm text-gray-600">Test your mic and speak clearly and naturally.</div>
-                  </div> */}
-                {/* </div> */}
-              </div>
+                  </div>
+                </div>
+              </div> */}
             </div>
-          // </div>
+          </div>
         )}
       </div>
     </div>
