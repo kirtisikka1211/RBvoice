@@ -66,45 +66,48 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
   const [technicalTimeRemaining, setTechnicalTimeRemaining] = useState(1800); // 30 minutes in seconds
   const [showCompletePopup, setShowCompletePopup] = useState(false);
+  const [shouldHideMic, setShouldHideMic] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Initialize with bot greeting based on interview type
     if (interviewType === 'technical') {
-              setChatMessages([
-          {
-            id: '1',
-            type: 'bot',
-            content: "Welcome to the technical interview! You have 30 minutes to work on the problem. Good luck!",
-            timestamp: new Date(),
-            status: 'sent'
-          }
-        ]);
+      setChatMessages([
+        {
+          id: '1',
+          type: 'bot',
+          content: "Welcome to the technical interview! You have 30 minutes to work on the problem. Good luck!",
+          timestamp: new Date(),
+          status: 'sent'
+        }
+      ]);
     } else {
       setChatMessages([
         {
           id: '1',
           type: 'bot',
-          content: "Hello! I'm your AI interviewer. I'll be asking you a few questions to understand your background and experience. Click the microphone button to begin the first question.",
+          content: "Hello! I'm your AI interviewer. I'll be asking you a few questions to understand your background and experience.",
           timestamp: new Date(),
           status: 'sent'
         }
       ]);
     }
+  }, [interviewType]);
 
+  useEffect(() => {
+    // Technical interview countdown timer
+    if (!(isRecording && interviewType === 'technical')) return;
     let interval: NodeJS.Timeout;
-    if (isRecording && interviewType === 'technical') {
-      interval = setInterval(() => {
-        setTechnicalTimeRemaining(prev => {
-          if (prev <= 1) {
-            // Time's up - auto complete technical interview
-            completeTechnicalInterview();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    interval = setInterval(() => {
+      setTechnicalTimeRemaining(prev => {
+        if (prev <= 1) {
+          // Time's up - auto complete technical interview
+          completeTechnicalInterview();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(interval);
   }, [isRecording, interviewType]);
 
@@ -153,6 +156,8 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
                 
                 // Bot wishes good luck after 1 second
                 setTimeout(() => {
+                  // Hide mic as soon as the AI says goodbye
+                  setShouldHideMic(true);
                   setChatMessages(prev => [...prev, {
                     id: Date.now().toString() + 'bot-goodbye',
                     type: 'bot',
@@ -338,8 +343,8 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
       <div className="border-t border-gray-200 bg-white px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {/* Mic Button - Only show when not on last question and popup not shown */}
-            {interviewType === 'pre-screen' && currentQuestion < mockQuestions.length - 1 && !showCompletePopup && (
+            {/* Mic Button - Hide only after the AI says goodbye (or when popup is shown) */}
+            {interviewType === 'pre-screen' && !shouldHideMic && !showCompletePopup && (
               <button
                 onClick={toggleRecording}
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
