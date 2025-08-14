@@ -356,7 +356,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
             <div className="text-sm text-gray-600">
               {showCompletePopup 
                 ? 'Interview completed!'
-                : interviewType === 'pre-screen' && currentQuestion < mockQuestions.length - 1 
+                : interviewType === 'pre-screen' && currentQuestion < mockQuestions.length 
                   ? (isRecording ? 'Recording ...' : 'Click to start')
                   : 'Interview complete'
               }
