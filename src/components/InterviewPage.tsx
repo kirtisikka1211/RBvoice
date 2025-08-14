@@ -65,6 +65,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
   const [liveTranscript, setLiveTranscript] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
   const [technicalTimeRemaining, setTechnicalTimeRemaining] = useState(1800); // 30 minutes in seconds
+  const [showCompletePopup, setShowCompletePopup] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -129,7 +130,46 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
         
         // Function to show question and answer
         const showQuestionAndAnswer = (index: number) => {
-          if (index >= mockQuestions.length) return;
+          if (index >= mockQuestions.length) {
+            // Interview is over, bot asks if candidate has questions
+            setTimeout(() => {
+              setChatMessages(prev => [...prev, {
+                id: Date.now().toString() + 'interview-over',
+                type: 'bot',
+                content: "Great! That concludes our interview. Do you have any questions for me?",
+                timestamp: new Date(),
+                status: 'sent'
+              }]);
+              
+              // Candidate says no after 2 seconds
+              setTimeout(() => {
+                setChatMessages(prev => [...prev, {
+                  id: Date.now().toString() + 'candidate-no',
+                  type: 'user',
+                  content: "No, I don't have any questions. Thank you.",
+                  timestamp: new Date(),
+                  status: 'sent'
+                }]);
+                
+                // Bot wishes good luck after 1 second
+                setTimeout(() => {
+                  setChatMessages(prev => [...prev, {
+                    id: Date.now().toString() + 'bot-goodbye',
+                    type: 'bot',
+                    content: "Perfect! Thank you for your time. I wish you the best of luck with your application. Have a great day!",
+                    timestamp: new Date(),
+                    status: 'sent'
+                  }]);
+                  
+                  // Show complete interview popup after 1 second
+                  setTimeout(() => {
+                    setShowCompletePopup(true);
+                  }, 1000);
+                }, 1000);
+              }, 2000);
+            }, 1000);
+            return;
+          }
           
           // Show question
           setChatMessages(prev => [...prev, {
@@ -298,27 +338,34 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
       <div className="border-t border-gray-200 bg-white px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {/* Mic Button */}
-            <button
-              onClick={toggleRecording}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                isRecording 
-                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                  : 'bg-[#2B5EA1] hover:bg-[#244E85] text-white'
-              }`}
-            >
-              <Mic size={20} />
-            </button>
+            {/* Mic Button - Only show when not on last question and popup not shown */}
+            {interviewType === 'pre-screen' && currentQuestion < mockQuestions.length - 1 && !showCompletePopup && (
+              <button
+                onClick={toggleRecording}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                  isRecording 
+                    ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                    : 'bg-[#2B5EA1] hover:bg-[#244E85] text-white'
+                }`}
+              >
+                <Mic size={20} />
+              </button>
+            )}
 
             {/* Status */}
             <div className="text-sm text-gray-600">
-              {isRecording ? 'Recording ...' : 'Click to start'}
+              {showCompletePopup 
+                ? 'Interview completed!'
+                : interviewType === 'pre-screen' && currentQuestion < mockQuestions.length - 1 
+                  ? (isRecording ? 'Recording ...' : 'Click to start')
+                  : 'Interview complete'
+              }
             </div>
           </div>
 
           {/* Controls */}
           <div className="flex items-center space-x-2">
-            {interviewType === 'pre-screen' && (
+            {interviewType === 'pre-screen' && currentQuestion === mockQuestions.length - 1 && (
               <button
                 onClick={completeInterview}
                 className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
@@ -340,6 +387,40 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
         </div>
       </div>
 
+      {/* Complete Interview Popup */}
+      {showCompletePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle size={32} className="text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Interview Completed!
+              </h3>
+              <p className="text-sm text-gray-600">
+                Thank you for completing the interview. You can now review and submit your responses.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowCompletePopup(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Review
+              </button>
+              <button
+                onClick={completeInterview}
+                className="flex-1 px-4 py-2 bg-[#2B5EA1] text-white rounded-md hover:bg-[#244E85] transition-colors"
+              >
+                Complete Interview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
