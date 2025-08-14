@@ -32,7 +32,7 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (formData.email === 'user@ylogx.io') {
-      newErrors.email = 'This email is not allowed. Please contact your recruiter for a new link.';
+      newErrors.email = 'The link has expired. Please contact your recruiter for a new link.';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
