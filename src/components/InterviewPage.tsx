@@ -8,7 +8,6 @@ import {
   Volume2,
   ChevronLeft,
   ChevronRight,
-  RotateCcw,
   Pause,
   Play,
   SkipForward,
@@ -36,6 +35,7 @@ interface ChatMessage {
 interface InterviewPageProps {
   userEmail: string;
   onComplete: (script: any) => void;
+  interviewType: 'pre-screen' | 'technical';
 }
 
 const mockQuestions: InterviewQuestion[] = [
@@ -57,35 +57,47 @@ const mockAnswers: string[] = [
 
 const getMockAnswer = (index: number): string => mockAnswers[index] ?? '';
 
-const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) => {
+const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, interviewType }) => {
   const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(1200); // 20 minutes in seconds
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [liveTranscript, setLiveTranscript] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
+  const [technicalTimeRemaining, setTechnicalTimeRemaining] = useState(1800); // 30 minutes in seconds
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Initialize with bot greeting
-    setChatMessages([
-      {
-        id: '1',
-        type: 'bot',
-        content: "Hello! I'm your AI interviewer. I'll be asking you a few questions to understand your background and experience. Let's start with the first question. What is your name?",
-        timestamp: new Date(),
-        status: 'sent'
-      }
-    ]);
+    // Initialize with bot greeting based on interview type
+    if (interviewType === 'technical') {
+              setChatMessages([
+          {
+            id: '1',
+            type: 'bot',
+            content: "Welcome to the technical interview! You have 30 minutes to work on the problem. Good luck!",
+            timestamp: new Date(),
+            status: 'sent'
+          }
+        ]);
+    } else {
+      setChatMessages([
+        {
+          id: '1',
+          type: 'bot',
+          content: "Hello! I'm your AI interviewer. I'll be asking you a few questions to understand your background and experience. Click the microphone button to begin the first question.",
+          timestamp: new Date(),
+          status: 'sent'
+        }
+      ]);
+    }
 
     let interval: NodeJS.Timeout;
-    if (isRecording) {
+    if (isRecording && interviewType === 'technical') {
       interval = setInterval(() => {
-        setTimeRemaining(prev => {
+        setTechnicalTimeRemaining(prev => {
           if (prev <= 1) {
-            // Time's up - auto complete interview
-            completeInterview();
+            // Time's up - auto complete technical interview
+            completeTechnicalInterview();
             return 0;
           }
           return prev - 1;
@@ -93,7 +105,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRecording]);
+  }, [isRecording, interviewType]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -107,53 +119,64 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
   };
 
   const toggleRecording = () => {
-    setIsRecording(!isRecording);
     if (!isRecording) {
-      // Simulate live transcription for the current question
-      setLiveTranscript(getMockAnswer(currentQuestion));
+      // Start recording and begin interview flow
+      setIsRecording(true);
+      
+      if (interviewType === 'pre-screen') {
+        // For pre-screen interview, start the automatic question flow
+        let questionIndex = 0;
+        
+        // Function to show question and answer
+        const showQuestionAndAnswer = (index: number) => {
+          if (index >= mockQuestions.length) return;
+          
+          // Show question
+          setChatMessages(prev => [...prev, {
+            id: Date.now().toString() + index,
+            type: 'bot',
+            content: mockQuestions[index].question,
+            timestamp: new Date(),
+            status: 'sent'
+          }]);
+          
+          // Update current question
+          setCurrentQuestion(index);
+          
+          // Show answer after 2 seconds
+          setTimeout(() => {
+            const answer = getMockAnswer(index);
+            
+            // Save answer directly to chat (no live transcript needed)
+            setChatMessages(prev => [...prev, {
+              id: Date.now().toString() + index + 'answer',
+              type: 'user',
+              content: answer,
+              timestamp: new Date(),
+              status: 'sent'
+            }]);
+            
+            // Show next question after 2 more seconds
+            setTimeout(() => {
+              showQuestionAndAnswer(index + 1);
+            }, 2000);
+          }, 2000);
+        };
+        
+        // Start with first question
+        showQuestionAndAnswer(0);
+      } else {
+        // For technical interview, just start recording
+        setLiveTranscript("I'm working on the technical problem...");
+      }
     } else {
+      // Stop recording
+      setIsRecording(false);
       setLiveTranscript('');
     }
   };
 
-  const repeatQuestion = () => {
-    setChatMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      type: 'bot',
-      content: mockQuestions[currentQuestion].question,
-      timestamp: new Date(),
-      status: 'sent'
-    }]);
-  };
 
-  const nextQuestion = () => {
-    if (liveTranscript.trim()) {
-      // Save current answer
-      setChatMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        type: 'user',
-        content: liveTranscript,
-        timestamp: new Date(),
-        status: 'sent'
-      }]);
-      setLiveTranscript('');
-    }
-
-    if (currentQuestion < mockQuestions.length - 1) {
-      const nextIndex = currentQuestion + 1;
-      setCurrentQuestion(nextIndex);
-      // Add next question
-      setChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: mockQuestions[nextIndex].question,
-        timestamp: new Date(),
-        status: 'sent'
-      }]);
-    } else {
-      completeInterview();
-    }
-  };
 
   const completeInterview = () => {
     setIsRecording(false);
@@ -165,7 +188,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
         answer: getMockAnswer(index),
         duration: Math.floor(Math.random() * 120) + 30
       })),
-      totalDuration: 1200 - timeRemaining, // Time used
+      totalDuration: 0, // No timer for pre-screen interview
       feedback: "Strong communication skills demonstrated throughout the interview. Good technical knowledge and problem-solving approach.",
       timestamp: new Date().toLocaleString()
     };
@@ -174,35 +197,58 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
     navigate('/interview/completed');
   };
 
-  const getMicButtonState = () => {
-    if (isRecording) return 'recording';
-    return 'idle';
+
+
+  const completeTechnicalInterview = () => {
+    setIsRecording(false);
+    
+    const script = {
+      type: 'technical',
+      totalDuration: 0, // No timer for technical interview
+      feedback: "Technical interview completed. Candidate demonstrated problem-solving skills.",
+      timestamp: new Date().toLocaleString()
+    };
+    
+    onComplete(script);
+    navigate('/interview/completed');
   };
+
+
 
   return (
     <div className="h-full flex flex-col">
-      {/* Timer Header */}
+      {/* Interview Type Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Clock size={16} className="text-gray-500" />
-            <span className="text-sm text-gray-600">Time remaining:</span>
-            <span className={`font-medium ${timeRemaining <= 300 ? 'text-red-600' : 'text-gray-900'}`}>
-              {formatTime(timeRemaining)}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Question {currentQuestion + 1} of {mockQuestions.length}</span>
-            <div className="flex items-center space-x-1">
-              {mockQuestions.map((_, index) => (
-                <div key={index} className={`w-2 h-2 rounded-full ${
-                  index < currentQuestion ? 'bg-green-500' :
-                  index === currentQuestion ? 'bg-blue-500' :
-                  'bg-gray-300'
-                }`} />
-              ))}
+          {interviewType === 'technical' && (
+            <div className="flex items-center space-x-2">
+              <Clock size={16} className="text-gray-500" />
+              <span className="text-sm text-gray-600">Time remaining:</span>
+              <span className={`font-medium ${technicalTimeRemaining <= 300 ? 'text-red-600' : 'text-gray-900'}`}>
+                {formatTime(technicalTimeRemaining)}
+              </span>
             </div>
-          </div>
+          )}
+          {interviewType === 'pre-screen' && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Question {currentQuestion + 1} of {mockQuestions.length}</span>
+              <div className="flex items-center space-x-1">
+                {mockQuestions.map((_, index) => (
+                  <div key={index} className={`w-2 h-2 rounded-full ${
+                    index < currentQuestion ? 'bg-green-500' :
+                    index === currentQuestion ? 'bg-blue-500' :
+                    'bg-gray-300'
+                  }`} />
+                ))}
+              </div>
+            </div>
+          )}
+          {interviewType === 'technical' && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Technical Interview</span>
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -232,20 +278,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
             </div>
           ))}
           
-          {/* Live Transcript */}
-          {liveTranscript && (
-            <div className="flex justify-end">
-              <div className="flex items-start gap-3 max-w-3xl flex-row-reverse">
-                <div className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  👤
-                </div>
-                <div className="bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
-                  <div className="text-xs text-gray-500 mb-1">Typing...</div>
-                  <p className="text-sm leading-relaxed text-gray-700">{liveTranscript}</p>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* System Messages */}
           {connectionStatus === 'disconnected' && (
@@ -269,7 +302,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
             <button
               onClick={toggleRecording}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                getMicButtonState() === 'recording' 
+                isRecording 
                   ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
                   : 'bg-[#2B5EA1] hover:bg-[#244E85] text-white'
               }`}
@@ -279,31 +312,35 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete }) 
 
             {/* Status */}
             <div className="text-sm text-gray-600">
-              {getMicButtonState() === 'recording' && 'Recording...'}
-              {getMicButtonState() === 'idle' && 'Click to start'}
+              {isRecording ? 'Recording ...' : 'Click to start'}
             </div>
           </div>
 
           {/* Controls */}
           <div className="flex items-center space-x-2">
-            <button
-              onClick={repeatQuestion}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              title="Repeat question"
-            >
-              <RotateCcw size={16} />
-            </button>
-
-            <button
-              onClick={nextQuestion}
-              className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
-            >
-              <SkipForward size={16} />
-              <span>{currentQuestion < mockQuestions.length - 1 ? 'Next' : 'Complete'}</span>
-            </button>
+            {interviewType === 'pre-screen' && (
+              <button
+                onClick={completeInterview}
+                className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
+              >
+                <CheckCircle size={16} />
+                <span>Complete Interview</span>
+              </button>
+            )}
+            {interviewType === 'technical' && (
+              <button
+                onClick={completeTechnicalInterview}
+                className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
+              >
+                <CheckCircle size={16} />
+                <span>Complete Interview</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+
     </div>
   );
 };

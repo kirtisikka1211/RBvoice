@@ -95,15 +95,62 @@ const LandingPage: React.FC<LandingPageProps> = ({ userEmail }) => {
                 )}
               </div>
 
-              {/* Task 2: Upload Documents */}
+              {/* Task 2: Technical Interview */}
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <button
+                  onClick={() => toggleTask('technical')}
+                  className="w-full p-6 text-left hover:bg-gray-50 transition-colors flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <FileText size={24} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900">Technical Interview</h4>
+                      <p className="text-base text-gray-600">Complete a technical assessment within the time limit.</p>
+                      <div className="mt-1 flex items-center text-sm text-gray-500">
+                        <Clock size={16} className="mr-2 text-blue-600" />
+                        Timed: 30 minutes
+                      </div>
+                    </div>
+                  </div>
+                  {expandedTask === 'technical' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                
+                {expandedTask === 'technical' && (
+                  <div className="border-t border-gray-200 p-6 bg-gray-50">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3 text-base text-gray-600">
+                        <Clock size={18} className="text-blue-600" />
+                        <span>30-minute time limit</span>
+                      </div>
+                      <div className="flex items-center space-x-3 text-base text-gray-600">
+                        <FileText size={18} className="text-blue-600" />
+                        <span>Problem-solving assessment</span>
+                      </div>
+                      <div className="pt-4">
+                        <button
+                          onClick={() => navigate('/interview/idle?type=technical')}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
+                        >
+                          <FileText size={18} />
+                          <span>Start Technical Interview</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Task 3: Upload Documents */}
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <button
                   onClick={() => toggleTask('documents')}
                   className="w-full p-6 text-left hover:bg-gray-50 transition-colors flex items-center justify-between"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                      <Upload size={24} className="text-green-600" />
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Upload size={24} className="text-blue-600" />
                     </div>
                     <div>
                       <h4 className="text-lg font-medium text-gray-900">Upload Documents</h4>

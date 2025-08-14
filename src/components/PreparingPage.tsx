@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface PreparingPageProps {
   userEmail: string;
@@ -8,14 +8,16 @@ interface PreparingPageProps {
 
 const PreparingPage: React.FC<PreparingPageProps> = ({ userEmail }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const interviewType = searchParams.get('type') || 'pre-screen';
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/interview/active');
+      navigate(`/interview/active?type=${interviewType}`);
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, interviewType]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -25,7 +27,7 @@ const PreparingPage: React.FC<PreparingPageProps> = ({ userEmail }) => {
             <Bot size={24} className="text-blue-600" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-1">
-            Preparing Your Interview
+            Preparing Your {interviewType === 'technical' ? 'Technical ' : ''}Interview
           </h3>
           <p className="text-sm text-gray-600">
             Our AI assistant is getting everything ready for you

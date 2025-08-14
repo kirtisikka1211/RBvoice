@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import Login from './Login';
 import Layout from './components/Layout';
 import LandingPage from './components/LandingPage';
@@ -9,16 +9,31 @@ import InterviewPage from './components/InterviewPage';
 import CompletedPage from './components/CompletedPage';
 
 interface InterviewScript {
-  questions: Array<{
-  id: number;
-  question: string;
-  answer?: string;
-  duration?: number;
+  questions?: Array<{
+    id: number;
+    question: string;
+    answer?: string;
+    duration?: number;
   }>;
   totalDuration: number;
   feedback?: string;
   timestamp: string;
+  type?: 'pre-screen' | 'technical';
 }
+
+// Wrapper component to handle search params
+const InterviewPageWrapper: React.FC<{ userEmail: string; onComplete: (script: InterviewScript) => void }> = ({ userEmail, onComplete }) => {
+  const [searchParams] = useSearchParams();
+  const interviewType = searchParams.get('type') as 'pre-screen' | 'technical' || 'pre-screen';
+  
+  return (
+    <InterviewPage 
+      userEmail={userEmail} 
+      onComplete={onComplete}
+      interviewType={interviewType}
+    />
+  );
+};
 
 function App() {
   const [userEmail, setUserEmail] = useState('');
@@ -119,7 +134,7 @@ function App() {
                 <Navigate to="/login" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
-                  <InterviewPage 
+                  <InterviewPageWrapper 
                     userEmail={userEmail} 
                     onComplete={handleInterviewComplete}
                   />

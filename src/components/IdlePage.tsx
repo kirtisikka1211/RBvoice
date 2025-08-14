@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mic, CheckCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface IdlePageProps {
   userEmail: string;
@@ -8,9 +8,11 @@ interface IdlePageProps {
 
 const IdlePage: React.FC<IdlePageProps> = ({ userEmail }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const interviewType = searchParams.get('type') || 'pre-screen';
 
   const beginInterview = () => {
-    navigate('/interview/preparing');
+    navigate(`/interview/preparing?type=${interviewType}`);
   };
 
   return (
@@ -21,10 +23,10 @@ const IdlePage: React.FC<IdlePageProps> = ({ userEmail }) => {
             <Mic size={32} style={{ color: 'rgb(51, 97, 158)' }} />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-3">
-            Ready to Begin Your Interview?
+            Ready to Begin Your {interviewType === 'technical' ? 'Technical ' : ''}Interview?
           </h3>
           <p className="text-sm text-gray-600 mb-6 max-w-xl mx-auto">
-            You're all set! Click the button below to start your AI-powered interview. 
+            You're all set! Click the button below to start your {interviewType === 'technical' ? 'technical assessment' : 'AI-powered interview'}. 
             Make sure you're in a quiet environment and your microphone is working properly.
           </p>
           
@@ -50,12 +52,33 @@ const IdlePage: React.FC<IdlePageProps> = ({ userEmail }) => {
             </ul>
           </div>
 
+          {/* Browser Compatibility & Validity */}
+          <div className="bg-yellow-50 rounded-lg p-4 mb-6 max-w-xl mx-auto">
+            <h4 className="font-medium text-yellow-900 mb-2">Browser Compatibility & Validity:</h4>
+            <div className="space-y-3">
+              <div>
+
+                <ul className="text-left text-yellow-700 space-y-1 text-sm">
+                  <li>• Chrome  (Recommended)</li>
+                  <li>• Firefox </li>
+                  <li>• Link valid for 3 days</li>
+                  <li>• Can only review for 3 days</li>
+                  <li>• Must be completed in one session</li>
+                </ul>
+              </div>
+              <div>
+
+              
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={beginInterview}
             className="text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 mx-auto bg-[#2B5EA1] hover:bg-[#244E85]"
           >
             <Mic size={16} className="text-white" />
-            <span>Begin Interview Now</span>
+            <span>Begin </span>
           </button>
         </div>
       </div>
