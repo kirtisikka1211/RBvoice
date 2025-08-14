@@ -31,6 +31,8 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
     
     if (!formData.email) {
       newErrors.email = 'Email is required';
+    } else if (formData.email === 'user@ylogx.io') {
+      newErrors.email = 'This email is not allowed. Please contact your recruiter for a new link.';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
@@ -68,6 +70,8 @@ function Login({ onLogin, isLoading = false }: LoginProps) {
             <h2 className="text-xl font-semibold text-gray-900 mb-1">Welcome Back</h2>
             <p className="text-sm text-gray-600">Sign in to access your interview</p>
           </div>
+
+          
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
