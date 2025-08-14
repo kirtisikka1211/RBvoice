@@ -365,15 +365,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
 
           {/* Controls */}
           <div className="flex items-center space-x-2">
-            {interviewType === 'pre-screen' && currentQuestion === mockQuestions.length - 1 && (
-              <button
-                onClick={completeInterview}
-                className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
-              >
-                <CheckCircle size={16} />
-                <span>Complete Interview</span>
-              </button>
-            )}
+           
             {interviewType === 'technical' && (
               <button
                 onClick={completeTechnicalInterview}
@@ -405,12 +397,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
 
             {/* Action Buttons */}
             <div className="flex space-x-3">
-              <button
-                onClick={() => setShowCompletePopup(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Review
-              </button>
+         
               <button
                 onClick={completeInterview}
                 className="flex-1 px-4 py-2 bg-[#2B5EA1] text-white rounded-md hover:bg-[#244E85] transition-colors"
