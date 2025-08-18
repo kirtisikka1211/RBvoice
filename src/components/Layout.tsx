@@ -60,12 +60,14 @@ const Layout: React.FC<LayoutProps> = ({ children, userEmail, onLogout }) => {
         <nav className="flex-1 p-3">
           <div className="space-y-1">
             {/* Active Navigation Item */}
-            <div
-              className="flex items-center px-2 py-1.5 rounded bg-white text-[rgb(52,77,109)] cursor-default"
+            <button
+              onClick={() => navigate('/')}
+              className="w-full flex items-center px-2 py-1.5 rounded bg-white text-[rgb(52,77,109)] hover:bg-white/80 transition-colors"
+              title="Home"
             >
               <Home size={16} />
               {!isCollapsed && <span className="text-sm font-medium ml-2">Home</span>}
-            </div>
+            </button>
             {/* Inactive Navigation Item */}
             <div className="flex items-center px-2 py-1.5 rounded text-white hover:bg-white/10 transition-colors cursor-pointer">
               <User size={16} />
