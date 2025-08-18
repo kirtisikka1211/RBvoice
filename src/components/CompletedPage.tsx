@@ -269,10 +269,15 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
             </div>
           )}
           <div className="bg-blue-50 rounded-lg p-3 text-center">
-            <div className="text-sm font-semibold text-blue-600 mb-1">
-              {interviewScript.timestamp}
+            <div className="text-xl font-bold text-blue-600 mb-1">
+              {interviewScript.type === 'technical' 
+                ? '30m' 
+                : `${Math.round(interviewScript.totalDuration / (interviewScript.questions?.length || 1) / 60 * 10) / 10}m`
+              }
             </div>
-            <div className="text-xs text-blue-700">Completed At</div>
+            <div className="text-xs text-blue-700">
+              {interviewScript.type === 'technical' ? 'Time Limit' : 'Avg Response'}
+            </div>
           </div>
         </div>
 

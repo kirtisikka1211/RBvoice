@@ -1,18 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Mic, 
-  MicOff, 
-  Bot, 
-  Clock, 
-  CheckCircle, 
-  Volume2,
-  ChevronLeft,
-  ChevronRight,
-  Pause,
-  Play,
-  SkipForward,
-  Settings,
-  Wifi,
+  Mic,
+  Bot,
+  Clock,
+  CheckCircle,
   WifiOff
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -57,13 +48,32 @@ const mockAnswers: string[] = [
 
 const getMockAnswer = (index: number): string => mockAnswers[index] ?? '';
 
-const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, interviewType }) => {
+// Technical interview mock questions and answers
+const technicalQuestions: InterviewQuestion[] = [
+  { id: 1, question: "Explain the difference between synchronous and asynchronous code in JavaScript and when you'd use each." },
+  { id: 2, question: "What is a closure in JavaScript? Provide a practical use case." },
+  { id: 3, question: "How would you optimize a React application that re-renders too frequently?" },
+  { id: 4, question: "Describe how you would design a REST API for a todo app. Include key endpoints and status codes." },
+  { id: 5, question: "You're given a slow SQL query. What steps would you take to diagnose and improve its performance?" }
+];
+
+const technicalAnswers: string[] = [
+  "Synchronous code blocks the .....",
+  "A closure is when a function captures variables from its lexical scope even after the outer function has returned. A common use case is encapsulating private state, like a function that returns increment/decrement handlers sharing the same counter variable.",
+  "Profile components to find .",
+  "Resources:....",
+  "Inspect e....." 
+];
+
+const getTechnicalAnswer = (index: number): string => technicalAnswers[index] ?? '';
+
+const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail: _userEmail, onComplete, interviewType }) => {
   const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [liveTranscript, setLiveTranscript] = useState('');
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
+  const [connectionStatus, _setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
   const [technicalTimeRemaining, setTechnicalTimeRemaining] = useState(1800); // 30 minutes in seconds
   const [showCompletePopup, setShowCompletePopup] = useState(false);
   const [shouldHideMic, setShouldHideMic] = useState(false);
@@ -76,7 +86,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
         {
           id: '1',
           type: 'bot',
-          content: "Welcome to the technical interview! You have 30 minutes to work on the problem. Good luck!",
+          content: "Welcome to the technical interview! You have 30 minutes. Good luck!",
           timestamp: new Date(),
           status: 'sent'
         }
@@ -129,7 +139,6 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
       
       if (interviewType === 'pre-screen') {
         // For pre-screen interview, start the automatic question flow
-        let questionIndex = 0;
         
         // Function to show question and answer
         const showQuestionAndAnswer = (index: number) => {
@@ -211,8 +220,59 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
         // Start with first question
         showQuestionAndAnswer(0);
       } else {
-        // For technical interview, just start recording
-        setLiveTranscript("I'm working on the technical problem...");
+        // For technical interview, run an automatic Q&A flow similar to pre-screen
+
+        const showTechQuestionAndAnswer = (index: number) => {
+          if (index >= technicalQuestions.length) {
+            // Wrap up the technical session
+            setTimeout(() => {
+              setChatMessages(prev => [...prev, {
+                id: Date.now().toString() + 'technical-over',
+                type: 'bot',
+                content: "Great! That concludes the technical interview.",
+                timestamp: new Date(),
+                status: 'sent'
+              }]);
+              // Stop recording, hide mic, and show completion popup
+              setTimeout(() => {
+                setIsRecording(false);
+                setShouldHideMic(true);
+                setShowCompletePopup(true);
+              }, 1000);
+            }, 500);
+            return;
+          }
+
+          // Show question
+          setChatMessages(prev => [...prev, {
+            id: Date.now().toString() + 't' + index,
+            type: 'bot',
+            content: technicalQuestions[index].question,
+            timestamp: new Date(),
+            status: 'sent'
+          }]);
+
+          // Track progress index
+          setCurrentQuestion(index);
+
+          // Show answer after 2 seconds
+          setTimeout(() => {
+            const answer = getTechnicalAnswer(index);
+            setChatMessages(prev => [...prev, {
+              id: Date.now().toString() + 't' + index + 'answer',
+              type: 'user',
+              content: answer,
+              timestamp: new Date(),
+              status: 'sent'
+            }]);
+
+            // Next question after 2 seconds
+            setTimeout(() => showTechQuestionAndAnswer(index + 1), 2000);
+          }, 2000);
+        };
+
+        // Start technical flow
+        showTechQuestionAndAnswer(0);
       }
     } else {
       // Stop recording
@@ -344,8 +404,8 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
       <div className="border-t border-gray-200 bg-white px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {/* Mic Button - Hide only after the AI says goodbye (or when popup is shown) */}
-            {interviewType === 'pre-screen' && !shouldHideMic && !showCompletePopup && (
+            {/* Mic Button - show for both interview types, hide after completion/popup */}
+            {!shouldHideMic && !showCompletePopup && (
               <button
                 onClick={toggleRecording}
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
@@ -360,27 +420,18 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
 
             {/* Status */}
             <div className="text-sm text-gray-600">
-              {showCompletePopup 
+              { (showCompletePopup || shouldHideMic)
                 ? 'Interview completed!'
-                : interviewType === 'pre-screen' && currentQuestion < mockQuestions.length 
-                  ? (isRecording ? 'Recording ...' : 'Click to start')
-                  : 'Interview complete'
+                : interviewType === 'pre-screen'
+                  ? (currentQuestion < mockQuestions.length ? (isRecording ? 'Recording ...' : 'Click to start') : 'Interview complete')
+                  : (isRecording ? 'Recording ...' : 'Click to start')
               }
             </div>
           </div>
 
           {/* Controls */}
           <div className="flex items-center space-x-2">
-           
-            {interviewType === 'technical' && (
-              <button
-                onClick={completeTechnicalInterview}
-                className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 text-sm"
-              >
-                <CheckCircle size={16} />
-                <span>Complete Interview</span>
-              </button>
-            )}
+            {/* No extra controls needed; completion handled via popup */}
           </div>
         </div>
       </div>
@@ -403,9 +454,8 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
 
             {/* Action Buttons */}
             <div className="flex space-x-3">
-         
               <button
-                onClick={completeInterview}
+                onClick={interviewType === 'technical' ? completeTechnicalInterview : completeInterview}
                 className="flex-1 px-4 py-2 bg-[#2B5EA1] text-white rounded-md hover:bg-[#244E85] transition-colors"
               >
                 Complete Interview
