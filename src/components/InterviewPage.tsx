@@ -228,6 +228,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
     
     // Generate script with exactly 5 mock Q&A mapped to questions
     const script = {
+      type: 'pre-screen' as const,
       questions: mockQuestions.map((q, index) => ({
         ...q,
         answer: getMockAnswer(index),
@@ -239,7 +240,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
     };
     
     onComplete(script);
-    navigate('/interview/completed');
+    navigate('/interview/completed?type=pre-screen');
   };
 
 
@@ -255,7 +256,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail, onComplete, in
     };
     
     onComplete(script);
-    navigate('/interview/completed');
+    navigate('/interview/completed?type=technical');
   };
 
 

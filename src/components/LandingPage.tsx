@@ -1,15 +1,40 @@
 import React, { useState } from 'react';
-import { Bot, Mic, Clock, FileText, CheckCircle, ChevronDown, ChevronUp, Upload, Calendar, Eye } from 'lucide-react';
+import { Bot, Mic, Clock, FileText, ChevronDown, ChevronUp, Upload, Calendar, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface LandingPageProps {
-  userEmail: string;
+interface InterviewQuestion {
+  id: number;
+  question: string;
+  answer?: string;
+  duration?: number;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ userEmail }) => {
+interface InterviewScript {
+  questions?: InterviewQuestion[];
+  totalDuration: number;
+  feedback?: string;
+  timestamp: string;
+  type?: 'pre-screen' | 'technical';
+}
+
+interface LandingPageProps {
+  interviewScript: InterviewScript | null;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ interviewScript }) => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(true);
   const [expandedTask, setExpandedTask] = useState<string | null>('interview');
+
+  const hasCompletedInterview = Boolean(interviewScript);
+  const isSubmitted = (() => {
+    try {
+      const key = `interviewSubmitted:${localStorage.getItem('lastUserEmail') || ''}:${interviewScript?.type || 'pre-screen'}`;
+      return localStorage.getItem(key) === 'true';
+    } catch {
+      return false;
+    }
+  })();
 
   const startInterview = () => {
     navigate('/interview/idle');
@@ -82,13 +107,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ userEmail }) => {
                         <span>Only can review for 3 days</span>
                       </div>
                       <div className="pt-4">
-                        <button
-                          onClick={startInterview}
-                          className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
-                        >
-                          <Bot size={18} />
-                          <span>Start Interview</span>
-                        </button>
+                        {hasCompletedInterview && !isSubmitted ? (
+                          <button
+                            onClick={() => navigate('/interview/completed')}
+                            className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
+                          >
+                            <FileText size={18} />
+                            <span>Review & Submit</span>
+                          </button>
+                        ) : !hasCompletedInterview ? (
+                          <button
+                            onClick={startInterview}
+                            className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
+                          >
+                            <Bot size={18} />
+                            <span>Start Interview</span>
+                          </button>
+                        ) : (
+                          <div className="text-sm text-gray-600">Submission received.</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -129,13 +166,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ userEmail }) => {
                         <span>Problem-solving assessment</span>
                       </div>
                       <div className="pt-4">
-                        <button
-                          onClick={() => navigate('/interview/idle?type=technical')}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
-                        >
-                          <FileText size={18} />
-                          <span>Start Technical Interview</span>
-                        </button>
+                        {hasCompletedInterview && !isSubmitted ? (
+                          <button
+                            onClick={() => navigate('/interview/completed')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
+                          >
+                            <FileText size={18} />
+                            <span>View Your Submission</span>
+                          </button>
+                        ) : !hasCompletedInterview ? (
+                          <button
+                            onClick={() => navigate('/interview/idle?type=technical')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
+                          >
+                            <FileText size={18} />
+                            <span>Start Technical Interview</span>
+                          </button>
+                        ) : (
+                          <div className="text-sm text-gray-600">Submission received.</div>
+                        )}
                       </div>
                     </div>
                   </div>

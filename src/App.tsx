@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import Login from './Login';
 import Layout from './components/Layout';
@@ -40,6 +40,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [interviewScript, setInterviewScript] = useState<InterviewScript | null>(null);
 
+  const storageKey = (email: string) => `interviewScript:${email}`;
+
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true);
     
@@ -49,6 +51,7 @@ function App() {
     // In a real app, you would validate credentials here
     if (email && password) {
       setUserEmail(email);
+      try { localStorage.setItem('lastUserEmail', email); } catch {}
     }
     
     setIsLoading(false);
@@ -61,15 +64,36 @@ function App() {
 
   const handleInterviewComplete = (script: InterviewScript) => {
     setInterviewScript(script);
+    try {
+      if (userEmail) {
+        localStorage.setItem(storageKey(userEmail), JSON.stringify(script));
+      }
+    } catch {}
   };
 
   const handleUpdateScript = (updatedScript: InterviewScript) => {
     setInterviewScript(updatedScript);
+    try {
+      if (userEmail) {
+        localStorage.setItem(storageKey(userEmail), JSON.stringify(updatedScript));
+      }
+    } catch {}
   };
 
   const handleReset = () => {
     setInterviewScript(null);
   };
+
+  // Load any existing interview for this user when they log in
+  useEffect(() => {
+    if (!userEmail) return;
+    try {
+      const saved = localStorage.getItem(storageKey(userEmail));
+      if (saved) {
+        setInterviewScript(JSON.parse(saved));
+      }
+    } catch {}
+  }, [userEmail]);
 
   return (
     <Router>
@@ -95,7 +119,7 @@ function App() {
                 <Navigate to="/login" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
-                  <LandingPage userEmail={userEmail} />
+                  <LandingPage interviewScript={interviewScript} />
                 </Layout>
               )
             } 
@@ -106,6 +130,8 @@ function App() {
             element={
               !userEmail ? (
                 <Navigate to="/login" replace />
+              ) : interviewScript ? (
+                <Navigate to="/interview/completed" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
                   <IdlePage userEmail={userEmail} />
@@ -119,6 +145,8 @@ function App() {
             element={
               !userEmail ? (
                 <Navigate to="/login" replace />
+              ) : interviewScript ? (
+                <Navigate to="/interview/completed" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
                   <PreparingPage userEmail={userEmail} />
@@ -132,6 +160,8 @@ function App() {
             element={
               !userEmail ? (
                 <Navigate to="/login" replace />
+              ) : interviewScript ? (
+                <Navigate to="/interview/completed" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
                   <InterviewPageWrapper 

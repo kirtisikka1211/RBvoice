@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   CheckCircle, 
   Edit3, 
@@ -45,6 +45,17 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [selectedEmoji, setSelectedEmoji] = useState<string>('');
   const [feedbackComment, setFeedbackComment] = useState('');
+  const submittedKey = `interviewSubmitted:${userEmail}:${interviewScript.type || 'pre-screen'}`;
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(submittedKey);
+      if (saved === 'true') {
+        setIsSubmitted(true);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submittedKey]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -107,6 +118,9 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
     
     // Mark as submitted and close modals
     setIsSubmitted(true);
+    try {
+      localStorage.setItem(submittedKey, 'true');
+    } catch {}
     setShowFeedbackModal(false);
     setShowConfirmationModal(false);
     setSelectedEmoji('');
