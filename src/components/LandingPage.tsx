@@ -18,18 +18,29 @@ interface InterviewScript {
 }
 
 interface LandingPageProps {
-  interviewScript: InterviewScript | null;
+  userEmail: string;
+  preScreenScript: InterviewScript | null;
+  technicalScript: InterviewScript | null;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ interviewScript }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ userEmail, preScreenScript, technicalScript }) => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(true);
   const [expandedTask, setExpandedTask] = useState<string | null>('interview');
 
-  const hasCompletedInterview = Boolean(interviewScript);
-  const isSubmitted = (() => {
+  const hasCompletedPre = Boolean(preScreenScript);
+  const hasCompletedTech = Boolean(technicalScript);
+  const isSubmittedPre = (() => {
     try {
-      const key = `interviewSubmitted:${localStorage.getItem('lastUserEmail') || ''}:${interviewScript?.type || 'pre-screen'}`;
+      const key = `interviewSubmitted:${userEmail}:pre-screen`;
+      return localStorage.getItem(key) === 'true';
+    } catch {
+      return false;
+    }
+  })();
+  const isSubmittedTech = (() => {
+    try {
+      const key = `interviewSubmitted:${userEmail}:technical`;
       return localStorage.getItem(key) === 'true';
     } catch {
       return false;
@@ -107,15 +118,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ interviewScript }) => {
                         <span>Only can review for 3 days</span>
                       </div>
                       <div className="pt-4">
-                        {hasCompletedInterview && !isSubmitted ? (
+                        {hasCompletedPre && !isSubmittedPre ? (
                           <button
-                            onClick={() => navigate('/interview/completed')}
+                            onClick={() => navigate('/interview/completed?type=pre-screen')}
                             className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
                           >
                             <FileText size={18} />
                             <span>Review & Submit</span>
                           </button>
-                        ) : !hasCompletedInterview ? (
+                        ) : !hasCompletedPre ? (
                           <button
                             onClick={startInterview}
                             className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
@@ -166,15 +177,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ interviewScript }) => {
                         <span>Problem-solving assessment</span>
                       </div>
                       <div className="pt-4">
-                        {hasCompletedInterview && !isSubmitted ? (
+                        {hasCompletedTech && !isSubmittedTech ? (
                           <button
-                            onClick={() => navigate('/interview/completed')}
+                            onClick={() => navigate('/interview/completed?type=technical')}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"
                           >
                             <FileText size={18} />
-                            <span>View Your Submission</span>
+                            <span>Review & Submit</span>
                           </button>
-                        ) : !hasCompletedInterview ? (
+                        ) : !hasCompletedTech ? (
                           <button
                             onClick={() => navigate('/interview/idle?type=technical')}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 text-base"

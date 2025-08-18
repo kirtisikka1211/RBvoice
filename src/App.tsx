@@ -21,10 +21,21 @@ interface InterviewScript {
   type?: 'pre-screen' | 'technical';
 }
 
-// Wrapper component to handle search params
+// Wrapper component to handle search params and disallow retake per type
 const InterviewPageWrapper: React.FC<{ userEmail: string; onComplete: (script: InterviewScript) => void }> = ({ userEmail, onComplete }) => {
   const [searchParams] = useSearchParams();
   const interviewType = searchParams.get('type') as 'pre-screen' | 'technical' || 'pre-screen';
+  const storageKey = (email: string, type?: 'pre-screen' | 'technical') => `interviewScript:${email}:${type || 'pre-screen'}`;
+  const hasScript = (() => {
+    try {
+      return !!localStorage.getItem(storageKey(userEmail, interviewType));
+    } catch {
+      return false;
+    }
+  })();
+  if (hasScript) {
+    return <Navigate to={`/interview/completed?type=${interviewType}`} replace />
+  }
   
   return (
     <InterviewPage 
@@ -35,12 +46,37 @@ const InterviewPageWrapper: React.FC<{ userEmail: string; onComplete: (script: I
   );
 };
 
+// Wrapper to pick the correct script per type
+const CompletedPageWrapper: React.FC<{
+  userEmail: string;
+  preScreenScript: InterviewScript | null;
+  technicalScript: InterviewScript | null;
+  onReset: (type: 'pre-screen' | 'technical') => void;
+  onUpdateScript: (script: InterviewScript) => void;
+}> = ({ userEmail, preScreenScript, technicalScript, onReset, onUpdateScript }) => {
+  const [searchParams] = useSearchParams();
+  const type = (searchParams.get('type') as 'pre-screen' | 'technical') || (preScreenScript ? 'pre-screen' : 'technical');
+  const script = type === 'technical' ? technicalScript : preScreenScript;
+  if (!script) {
+    return <Navigate to="/" replace />
+  }
+  return (
+    <CompletedPage
+      userEmail={userEmail}
+      interviewScript={script}
+      onReset={() => onReset(type)}
+      onUpdateScript={onUpdateScript}
+    />
+  );
+};
+
 function App() {
   const [userEmail, setUserEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [interviewScript, setInterviewScript] = useState<InterviewScript | null>(null);
+  const [preScreenScript, setPreScreenScript] = useState<InterviewScript | null>(null);
+  const [technicalScript, setTechnicalScript] = useState<InterviewScript | null>(null);
 
-  const storageKey = (email: string) => `interviewScript:${email}`;
+  const storageKey = (email: string, type?: 'pre-screen' | 'technical') => `interviewScript:${email}:${type || 'pre-screen'}`;
 
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true);
@@ -59,39 +95,56 @@ function App() {
 
   const handleLogout = () => {
     setUserEmail('');
-    setInterviewScript(null);
+    setPreScreenScript(null);
+    setTechnicalScript(null);
   };
 
   const handleInterviewComplete = (script: InterviewScript) => {
-    setInterviewScript(script);
+    if (script.type === 'technical') {
+      setTechnicalScript(script);
+    } else {
+      setPreScreenScript(script);
+    }
     try {
       if (userEmail) {
-        localStorage.setItem(storageKey(userEmail), JSON.stringify(script));
+        localStorage.setItem(storageKey(userEmail, script.type), JSON.stringify(script));
       }
     } catch {}
   };
 
   const handleUpdateScript = (updatedScript: InterviewScript) => {
-    setInterviewScript(updatedScript);
+    if (updatedScript.type === 'technical') {
+      setTechnicalScript(updatedScript);
+    } else {
+      setPreScreenScript(updatedScript);
+    }
     try {
       if (userEmail) {
-        localStorage.setItem(storageKey(userEmail), JSON.stringify(updatedScript));
+        localStorage.setItem(storageKey(userEmail, updatedScript.type), JSON.stringify(updatedScript));
       }
     } catch {}
   };
 
-  const handleReset = () => {
-    setInterviewScript(null);
+  const handleReset = (type: 'pre-screen' | 'technical') => {
+    if (type === 'technical') {
+      setTechnicalScript(null);
+      try { if (userEmail) localStorage.removeItem(storageKey(userEmail, 'technical')); } catch {}
+    } else {
+      setPreScreenScript(null);
+      try { if (userEmail) localStorage.removeItem(storageKey(userEmail, 'pre-screen')); } catch {}
+    }
   };
 
   // Load any existing interview for this user when they log in
   useEffect(() => {
     if (!userEmail) return;
     try {
-      const saved = localStorage.getItem(storageKey(userEmail));
-      if (saved) {
-        setInterviewScript(JSON.parse(saved));
-      }
+      const pre = localStorage.getItem(storageKey(userEmail, 'pre-screen'));
+      if (pre) setPreScreenScript(JSON.parse(pre));
+    } catch {}
+    try {
+      const tech = localStorage.getItem(storageKey(userEmail, 'technical'));
+      if (tech) setTechnicalScript(JSON.parse(tech));
     } catch {}
   }, [userEmail]);
 
@@ -119,7 +172,7 @@ function App() {
                 <Navigate to="/login" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
-                  <LandingPage interviewScript={interviewScript} />
+                  <LandingPage userEmail={userEmail} preScreenScript={preScreenScript} technicalScript={technicalScript} />
                 </Layout>
               )
             } 
@@ -130,8 +183,6 @@ function App() {
             element={
               !userEmail ? (
                 <Navigate to="/login" replace />
-              ) : interviewScript ? (
-                <Navigate to="/interview/completed" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
                   <IdlePage userEmail={userEmail} />
@@ -145,8 +196,6 @@ function App() {
             element={
               !userEmail ? (
                 <Navigate to="/login" replace />
-              ) : interviewScript ? (
-                <Navigate to="/interview/completed" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
                   <PreparingPage userEmail={userEmail} />
@@ -160,8 +209,6 @@ function App() {
             element={
               !userEmail ? (
                 <Navigate to="/login" replace />
-              ) : interviewScript ? (
-                <Navigate to="/interview/completed" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
                   <InterviewPageWrapper 
@@ -178,13 +225,12 @@ function App() {
             element={
               !userEmail ? (
                 <Navigate to="/login" replace />
-              ) : !interviewScript ? (
-                <Navigate to="/" replace />
               ) : (
                 <Layout userEmail={userEmail} onLogout={handleLogout}>
-                  <CompletedPage 
+                  <CompletedPageWrapper
                     userEmail={userEmail}
-                    interviewScript={interviewScript}
+                    preScreenScript={preScreenScript}
+                    technicalScript={technicalScript}
                     onReset={handleReset}
                     onUpdateScript={handleUpdateScript}
                   />

@@ -213,7 +213,7 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
                     <div className="flex-1">
                       <div className="mb-2">
                         <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
-                        <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p>
+                        {/* <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p> */}
                       </div>
                       <div className="bg-blue-50 rounded-lg p-3">
                         <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -357,7 +357,7 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
                   <div className="flex-1">
                     <div className="mb-2">
                       <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
-                      <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p>
+                      {/* <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p> */}
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-sm text-gray-700 leading-relaxed">{q.answer}</p>
