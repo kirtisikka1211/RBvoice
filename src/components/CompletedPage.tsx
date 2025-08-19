@@ -4,7 +4,8 @@ import {
   Edit3, 
   FileText, 
   Send,
-  Save 
+  Save,
+  AlertTriangle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -229,7 +230,7 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
                       <div className="flex-1">
                         <div className="mb-2">
                           <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
-                          <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p>
+                          {/* <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p> */}
                         </div>
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-sm text-gray-700 leading-relaxed">{q.answer}</p>
@@ -317,59 +318,71 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
               }
             </div>
             <div className="text-xs text-blue-700">
-              {interviewScript.type === 'technical' ? 'Time Limit' : 'Avg Response'}
+              {interviewScript.type === 'technical' ? 'Due Before' : 'Due Before'}
             </div>
           </div>
         </div>
 
         {interviewScript.type === 'technical' ? (
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <h4 className="text-lg font-semibold text-blue-900 mb-2">Technical Interview Summary</h4>
-            <p className="text-sm text-blue-800">
-              You completed the technical assessment within the allocated time. Your problem-solving approach and technical skills have been evaluated.
-            </p>
+            <h4 className="text-lg font-semibold text-blue-900 mb-2">Instructions</h4>
+            <div className="space-y-2 text-sm text-blue-800">
+              <p>Review your transcript below. Click Review to make edits if needed.</p>
+              {!isSubmitted && (
+                <div className="flex items-center space-x-2 text-blue-900/80">
+                  <AlertTriangle size={16} className="text-yellow-600" />
+                  <span className="font-semibold">Edits are disabled after submission.</span>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <h4 className="text-lg font-semibold text-blue-900 mb-2">Interview Summary</h4>
-            <p className="text-sm text-blue-800">
-              Review your responses below and make any necessary edits before submitting.
-            </p>
+            <h4 className="text-lg font-semibold text-blue-900 mb-2">Instructions</h4>
+            <div className="space-y-2 text-sm text-blue-800">
+              <p>Review your Q&A script below. Click Review to make edits before submitting.</p>
+              {!isSubmitted && (
+                <div className="flex items-center space-x-2 text-blue-900/80">
+                  <AlertTriangle size={16} className="text-yellow-600" />
+                  <span className="font-semibold">Edits are disabled after submission.</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        <div className="flex justify-center space-x-3 mb-6">
+        <div className="flex flex-col items-center mb-4">
           {!isSubmitted && (
-            <button
-              onClick={startTranscriptEditing}
-              className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
-            >
-              <Edit3 size={16} />
-              <span>Review</span>
-            </button>
-          )}
-          {!isSubmitted && (
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-                isSubmitting 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-[#2B5EA1] hover:bg-[#244E85] text-white'
-              }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <>
-                  <Send size={16} />
-                  <span>Submit </span>
-                </>
-              )}
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={startTranscriptEditing}
+                className="bg-[#2B5EA1] hover:bg-[#244E85] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+              >
+                <Edit3 size={16} />
+                <span>Review</span>
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                  isSubmitting 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-[#2B5EA1] hover:bg-[#244E85] text-white'
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    <span>Submit </span>
+                  </>
+                )}
+              </button>
+            </div>
           )}
           {isSubmitted && (
             <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-green-800 flex items-center space-x-2">
@@ -377,6 +390,12 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
               <span>Interview Submitted Successfully!</span>
             </div>
           )}
+          {/* {!isSubmitted && (
+            <div className="mt-2 text-[11px] text-gray-500 flex items-center space-x-1">
+              <Lock size={12} className="text-gray-400" />
+              <span>Edits are disabled after submission.</span>
+            </div>
+          )} */}
         </div>
       </div>
 
