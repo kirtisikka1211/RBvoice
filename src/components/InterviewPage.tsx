@@ -4,7 +4,8 @@ import {
   Bot,
   Clock,
   CheckCircle,
-  WifiOff
+  WifiOff,
+  XCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,7 +59,7 @@ const technicalQuestions: InterviewQuestion[] = [
 ];
 
 const technicalAnswers: string[] = [
-  "Synchronous code blocks the .....",
+  "Synchronous code blocks the thread until it finishes, while asynchronous code schedules work and continues executing. I'd use synchronous code for simple, quick operations and async for I/O-bound tasks like network requests, using promises/async-await to avoid blocking the UI.",
   "A closure is when a function captures variables from its lexical scope even after the outer function has returned. A common use case is encapsulating private state, like a function that returns increment/decrement handlers sharing the same counter variable.",
   "Profile components to find .",
   "Resources:....",
@@ -86,7 +87,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail: _userEmail, on
         {
           id: '1',
           type: 'bot',
-          content: "Welcome to the technical interview! You have 30 minutes. Good luck!",
+          content: "Welcome to the technical interview! You have 30 minutes to work on the problem. Good luck!",
           timestamp: new Date(),
           status: 'sent'
         }
@@ -296,7 +297,8 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail: _userEmail, on
       })),
       totalDuration: 0, // No timer for pre-screen interview
       feedback: "Strong communication skills demonstrated throughout the interview. Good technical knowledge and problem-solving approach.",
-      timestamp: new Date().toLocaleString()
+      timestamp: new Date().toLocaleString(),
+      version: 1
     };
     
     onComplete(script);
@@ -308,15 +310,47 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail: _userEmail, on
   const completeTechnicalInterview = () => {
     setIsRecording(false);
     
+    const questions = technicalQuestions.map((q, index) => ({
+      ...q,
+      answer: getTechnicalAnswer(index),
+      duration: Math.floor(Math.random() * 120) + 60
+    }));
+    const totalDuration = questions.reduce((acc, q) => acc + (q.duration || 0), 0);
+    let transcript = chatMessages
+      .filter(m => m.type === 'bot' || m.type === 'user')
+      .map(m => `${m.type === 'bot' ? 'AI' : 'You'}: ${m.content}`)
+      .join('\n');
+    if (!transcript || transcript.trim().length === 0) {
+      // Fallback to AI/You formatted log from questions/answers
+      transcript = technicalQuestions
+        .map((q, idx) => {
+          const answer = getTechnicalAnswer(idx);
+          return `AI: ${q.question}\nYou: ${answer}`;
+        })
+        .join('\n');
+    }
     const script = {
-      type: 'technical',
-      totalDuration: 0, // No timer for technical interview
+      type: 'technical' as const,
+      questions,
+      totalDuration,
       feedback: "Technical interview completed. Candidate demonstrated problem-solving skills.",
-      timestamp: new Date().toLocaleString()
+      timestamp: new Date().toLocaleString(),
+      transcript,
+      version: 1
     };
     
     onComplete(script);
     navigate('/interview/completed?type=technical');
+  };
+
+  const endSession = () => {
+    const confirmed = window.confirm('End session now? Your current progress will be saved.');
+    if (!confirmed) return;
+    if (interviewType === 'technical') {
+      completeTechnicalInterview();
+    } else {
+      completeInterview();
+    }
   };
 
 
@@ -431,7 +465,15 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail: _userEmail, on
 
           {/* Controls */}
           <div className="flex items-center space-x-2">
-            {/* No extra controls needed; completion handled via popup */}
+            {!showCompletePopup && (
+              <button
+                onClick={endSession}
+                className="px-3 py-2 rounded-md border border-red-200 text-red-600 hover:bg-red-50 flex items-center space-x-2 text-sm"
+              >
+                <XCircle size={16} />
+                <span>End Session</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

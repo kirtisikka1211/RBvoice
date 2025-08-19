@@ -54,15 +54,14 @@ const IdlePage: React.FC<IdlePageProps> = ({ userEmail }) => {
 
           {/* Browser Compatibility & Validity */}
           <div className="bg-yellow-50 rounded-lg p-4 mb-6 max-w-xl mx-auto">
-            <h4 className="font-medium text-yellow-900 mb-2">Browser Compatibility & Validity:</h4>
+            <h4 className="font-medium text-yellow-900 mb-2">Instructions:</h4>
             <div className="space-y-3">
               <div>
 
                 <ul className="text-left text-yellow-700 space-y-1 text-sm">
-                  <li>• Chrome  (Recommended)</li>
-                  <li>• Firefox </li>
-                  <li>• Link valid for 3 days</li>
-                  <li>• Can only review for 3 days</li>
+                  <li>• Use Chrome  (Recommended) or Firefox</li>
+                  
+                
                   <li>• Must be completed in one session</li>
                 </ul>
               </div>

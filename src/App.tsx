@@ -19,6 +19,8 @@ interface InterviewScript {
   feedback?: string;
   timestamp: string;
   type?: 'pre-screen' | 'technical';
+  version?: number;
+  transcript?: string;
 }
 
 // Wrapper component to handle search params and disallow retake per type
