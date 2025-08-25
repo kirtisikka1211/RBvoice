@@ -310,12 +310,15 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail: _userEmail, on
   const completeTechnicalInterview = () => {
     setIsRecording(false);
     
+    // Generate structured Q&A data for technical interview
     const questions = technicalQuestions.map((q, index) => ({
       ...q,
       answer: getTechnicalAnswer(index),
       duration: Math.floor(Math.random() * 120) + 60
     }));
     const totalDuration = questions.reduce((acc, q) => acc + (q.duration || 0), 0);
+    
+    // Keep transcript for backward compatibility, but now we have structured Q&A
     let transcript = chatMessages
       .filter(m => m.type === 'bot' || m.type === 'user')
       .map(m => `${m.type === 'bot' ? 'AI' : 'You'}: ${m.content}`)
@@ -329,13 +332,14 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ userEmail: _userEmail, on
         })
         .join('\n');
     }
+    
     const script = {
       type: 'technical' as const,
-      questions,
+      questions, // Now includes structured Q&A data
       totalDuration,
       feedback: "Technical interview completed. Candidate demonstrated problem-solving skills.",
       timestamp: new Date().toLocaleString(),
-      transcript,
+      transcript, // Keep for backward compatibility
       version: 1
     };
     

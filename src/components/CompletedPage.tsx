@@ -112,10 +112,6 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
     });
   };
 
-  const updateTranscript = (newText: string) => {
-    setEditableScript(prev => (prev ? { ...prev, transcript: newText } : prev));
-  };
-
   const handleSubmit = async () => {
     setShowFeedbackModal(true);
   };
@@ -187,94 +183,72 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
           </div>
         </div>
 
-        {/* Editing layout */}
-        {editableScript.type === 'technical' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Original Transcript */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <FileText size={20} className="text-blue-600" />
-                <h4 className="text-lg font-semibold text-gray-900">Original Transcript</h4>
-              </div>
-              <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 rounded-md p-3 max-h-[70vh] overflow-auto">{interviewScript.transcript}</pre>
+        {/* Editing layout - now consistent for both interview types */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Original Q&A */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center space-x-2 mb-4">
+              <FileText size={20} className="text-blue-600" />
+              <h4 className="text-lg font-semibold text-gray-900">
+                Original {editableScript.type === 'technical' ? 'Technical Q&A' : 'Interview Q&A'}
+              </h4>
             </div>
-            {/* Editable Transcript */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <Edit3 size={20} className="text-blue-600" />
-                <h4 className="text-lg font-semibold text-gray-900">Edit Transcript</h4>
-              </div>
-              <textarea
-                value={editableScript.transcript || ''}
-                onChange={(e) => updateTranscript(e.target.value)}
-                className="w-full min-h-[60vh] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical text-sm"
-                placeholder="Edit transcript here..."
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Original Script */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <FileText size={20} className="text-blue-600" />
-                <h4 className="text-lg font-semibold text-gray-900">Original Transcript</h4>
-              </div>
-              <div className="space-y-4">
-                {interviewScript.questions?.map((q, index) => (
-                  <div key={q.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                        <span className="text-xs font-medium text-blue-600">Q{index + 1}</span>
+            <div className="space-y-4">
+              {interviewScript.questions?.map((q, index) => (
+                <div key={q.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-xs font-medium text-blue-600">Q{index + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-2">
+                        <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
+                        <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p>
                       </div>
-                      <div className="flex-1">
-                        <div className="mb-2">
-                          <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
-                          {/* <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p> */}
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-sm text-gray-700 leading-relaxed">{q.answer}</p>
-                        </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-700 leading-relaxed">{q.answer}</p>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-            {/* Editable Script */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <Edit3 size={20} className="text-blue-600" />
-                <h4 className="text-lg font-semibold text-gray-900">Edit Transcript</h4>
-              </div>
-              <div className="space-y-4">
-                {editableScript.questions?.map((q, index) => (
-                  <div key={q.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                        <span className="text-xs font-medium text-blue-600">Q{index + 1}</span>
+          </div>
+          {/* Editable Q&A */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center space-x-2 mb-4">
+              <Edit3 size={20} className="text-blue-600" />
+              <h4 className="text-lg font-semibold text-gray-900">
+                Edit {editableScript.type === 'technical' ? 'Technical Q&A' : 'Interview Q&A'}
+              </h4>
+            </div>
+            <div className="space-y-4">
+              {editableScript.questions?.map((q, index) => (
+                <div key={q.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-xs font-medium text-blue-600">Q{index + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-2">
+                        <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
                       </div>
-                      <div className="flex-1">
-                        <div className="mb-2">
-                          <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
-                        </div>
-                        <div className="bg-blue-50 rounded-lg p-3">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Edit Answer:</label>
-                          <textarea
-                            value={q.answer || ''}
-                            onChange={(e) => updateQuestionAnswer(q.id, e.target.value)}
-                            className="w-full h-24 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                            placeholder="Edit your answer here..."
-                          />
-                        </div>
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Edit Answer:</label>
+                        <textarea
+                          value={q.answer || ''}
+                          onChange={(e) => updateQuestionAnswer(q.id, e.target.value)}
+                          className="w-full h-24 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                          placeholder="Edit your answer here..."
+                        />
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -399,23 +373,14 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
         </div>
       </div>
 
-      {/* Technical Transcript */}
-      {interviewScript.type === 'technical' && interviewScript.transcript && (
+      {/* Technical Q&A - now shows structured questions instead of just transcript */}
+      {interviewScript.type === 'technical' && interviewScript.questions && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center space-x-2 mb-4">
             <FileText size={20} className="text-blue-600" />
-            <h4 className="text-lg font-semibold text-gray-900">Transcript {interviewScript.version ? `(v${interviewScript.version})` : ''}</h4>
-          </div>
-          <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 rounded-md p-3">{interviewScript.transcript}</pre>
-        </div>
-      )}
-
-      {/* Q&A Script - for pre-screen */}
-      {interviewScript.type !== 'technical' && interviewScript.questions && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center space-x-2 mb-4">
-            <FileText size={20} className="text-blue-600" />
-            <h4 className="text-lg font-semibold text-gray-900">Interview Script {interviewScript.version ? `(v${interviewScript.version})` : ''}</h4>
+            <h4 className="text-lg font-semibold text-gray-900">
+              Technical Q&A {interviewScript.version ? `(v${interviewScript.version})` : '(v1)'}
+            </h4>
           </div>
 
           <div className="space-y-4">
@@ -428,7 +393,7 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
                   <div className="flex-1">
                     <div className="mb-2">
                       <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
-                      <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p>
+                      {/* <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p> */}
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-sm text-gray-700 leading-relaxed">{q.answer}</p>
@@ -441,17 +406,52 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
         </div>
       )}
 
-      {/* Version history drawer */}
+      {/* Q&A Script - for pre-screen */}
+      {interviewScript.type !== 'technical' && interviewScript.questions && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center space-x-2 mb-4">
+            <FileText size={20} className="text-blue-600" />
+            <h4 className="text-lg font-semibold text-gray-900">
+              Interview Q&A {interviewScript.version ? `(v${interviewScript.version})` : '(v1)'}
+            </h4>
+          </div>
+
+          <div className="space-y-4">
+            {interviewScript.questions.map((q, index) => (
+              <div key={q.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <span className="text-xs font-medium text-blue-600">Q{index + 1}</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="mb-2">
+                      <p className="text-xs font-medium text-gray-900 mb-1">{q.question}</p>
+                      {/* <p className="text-xs text-gray-500">Duration: {formatTime(q.duration || 0)}</p> */}
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-sm text-gray-700 leading-relaxed">{q.answer}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Version history drawer - show for both types */}
       {history.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
           <div className="flex items-center space-x-2 mb-3">
             <FileText size={18} className="text-blue-600" />
-            <h4 className="text-base font-semibold text-gray-900">Previous Versions</h4>
+            <h4 className="text-base font-semibold text-gray-900">Version History</h4>
           </div>
           <div className="space-y-2">
             {history.map((h, idx) => (
               <div key={idx} className="flex items-center justify-between text-sm bg-gray-50 rounded-md p-2">
-                <div className="text-gray-700">Version v{h.version || idx + 1} • {h.timestamp}</div>
+                <div className="text-gray-700">
+                  <span className="font-medium">v{h.version || idx + 1}</span> • {h.timestamp}
+                </div>
                 <button
                   onClick={() => setViewVersion(h)}
                   className="text-blue-600 hover:underline"
@@ -468,12 +468,12 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{viewVersion.type === 'technical' ? 'Transcript' : 'Interview Script'} v{viewVersion.version || ''}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {viewVersion.type === 'technical' ? 'Technical Q&A' : 'Interview Q&A'} v{viewVersion.version || 1}
+              </h3>
               <p className="text-xs text-gray-500">{viewVersion.timestamp}</p>
             </div>
-            {viewVersion.type === 'technical' && viewVersion.transcript ? (
-              <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 rounded-md p-3 max-h-96 overflow-auto">{viewVersion.transcript}</pre>
-            ) : viewVersion.questions ? (
+            {viewVersion.questions ? (
               <div className="space-y-3 max-h-96 overflow-auto pr-1">
                 {viewVersion.questions.map((q, i) => (
                   <div key={q.id} className="border-b border-gray-200 pb-3 last:border-b-0 last:pb-0">
@@ -485,6 +485,8 @@ const CompletedPage: React.FC<CompletedPageProps> = ({
                   </div>
                 ))}
               </div>
+            ) : viewVersion.transcript ? (
+              <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 rounded-md p-3 max-h-96 overflow-auto">{viewVersion.transcript}</pre>
             ) : null}
             <div className="mt-4 flex justify-end">
               <button
