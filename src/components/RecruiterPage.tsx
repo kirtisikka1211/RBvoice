@@ -17,6 +17,7 @@ interface TechnicalQuestion {
   category: string;
   difficulty: 'easy' | 'medium' | 'hard';
   estimatedTime: number; // in minutes
+  isFollowUp?: boolean;
 }
 
 type SkillLevelCounts = { easy: number; medium: number; hard: number };
@@ -30,6 +31,7 @@ const RecruiterPage: React.FC = () => {
   // Configuration state
   const availableSkills = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'NoSQL', 'System Design'];
   const [selectedSkills, setSelectedSkills] = useState<Record<string, SkillLevelCounts>>({});
+  const [enableFollowUps, setEnableFollowUps] = useState<boolean>(false);
 
   // Sample technical questions for demonstration / fallback
   const sampleQuestions: TechnicalQuestion[] = [
@@ -127,13 +129,26 @@ const RecruiterPage: React.FC = () => {
             .replace('ALTERNATIVE', 'an alternative')
             .replace('SCENARIO', 'high traffic and strict latency')
             .replace('FEATURE', 'its core feature');
-          generated.push({
+          const base: TechnicalQuestion = {
             id: Date.now() + generated.length,
             question: questionText,
             category: skill,
             difficulty: level,
             estimatedTime: level === 'easy' ? 3 : level === 'medium' ? 5 : 7
-          });
+          };
+          generated.push(base);
+
+          if (enableFollowUps) {
+            const bump = (lvl: 'easy'|'medium'|'hard'): 'easy'|'medium'|'hard' => lvl === 'easy' ? 'medium' : lvl === 'medium' ? 'hard' : 'hard';
+            generated.push({
+              id: Date.now() + generated.length + 10000,
+              question: base.question + ' What trade-offs would you consider? Provide a deeper explanation.',
+              category: base.category,
+              difficulty: bump(base.difficulty),
+              estimatedTime: base.estimatedTime + 2,
+              isFollowUp: true
+            });
+          }
         }
       });
     });
@@ -305,6 +320,27 @@ const RecruiterPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Full-width follow-ups row */}
+          <div className="mt-4">
+            <div className="w-full bg-white border border-blue-100 rounded-lg p-3">
+              <div className="flex items-center">
+                <input
+                  id="enable-followups"
+                  type="checkbox"
+                  checked={enableFollowUps}
+                  onChange={(e) => setEnableFollowUps(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded"
+                />
+                <label htmlFor="enable-followups" className="ml-2 text-sm font-medium text-blue-900">
+                  Enable follow-up questions
+                </label>
+                <span className="ml-3 text-[11px] text-blue-800">
+                  Adds one deeper follow-up per question with higher difficulty.
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -409,6 +445,11 @@ const RecruiterPage: React.FC = () => {
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
                             {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
                           </span>
+                          {question.isFollowUp && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                              Follow-up
+                            </span>
+                          )}
                           {/* <span className="text-sm text-gray-500">
                             {question.estimatedTime} min
                           </span> */}
