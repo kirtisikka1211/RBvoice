@@ -6,7 +6,9 @@ import {
   Trash2, 
   FileText,
   Bot,
-  CheckCircle
+  CheckCircle,
+  Sliders,
+  Layers
 } from 'lucide-react';
 
 interface TechnicalQuestion {
@@ -17,13 +19,19 @@ interface TechnicalQuestion {
   estimatedTime: number; // in minutes
 }
 
+type SkillLevelCounts = { easy: number; medium: number; hard: number };
+
 const RecruiterPage: React.FC = () => {
   const [questions, setQuestions] = useState<TechnicalQuestion[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<TechnicalQuestion | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Sample technical questions for demonstration
+  // Configuration state
+  const availableSkills = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'NoSQL', 'System Design'];
+  const [selectedSkills, setSelectedSkills] = useState<Record<string, SkillLevelCounts>>({});
+
+  // Sample technical questions for demonstration / fallback
   const sampleQuestions: TechnicalQuestion[] = [
     {
       id: 1,
@@ -62,11 +70,87 @@ const RecruiterPage: React.FC = () => {
     }
   ];
 
-  const generateQuestions = async () => {
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills(prev => {
+      const copy = { ...prev };
+      if (copy[skill]) {
+        delete copy[skill];
+      } else {
+        copy[skill] = { easy: 1, medium: 2, hard: 1 };
+      }
+      return copy;
+    });
+  };
+
+  const updateSkillCount = (skill: string, level: keyof SkillLevelCounts, value: number) => {
+    setSelectedSkills(prev => ({
+      ...prev,
+      [skill]: { ...prev[skill], [level]: Math.max(0, Math.min(20, value || 0)) }
+    }));
+  };
+
+  const generateFromConfig = async () => {
     setIsGenerating(true);
     // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    const generated: TechnicalQuestion[] = [];
+    const templates: Record<'easy' | 'medium' | 'hard', string[]> = {
+      easy: [
+        'Define KEY in SKILL and give a simple example.',
+        'What problem does SKILL solve? Provide a one-line explanation.',
+        'Name two common use-cases for SKILL.'
+      ],
+      medium: [
+        'How would you debug ISSUE related to SKILL in a live app?',
+        'Explain PATTERN in SKILL and when to apply it.',
+        'Compare SKILL with ALTERNATIVE and discuss trade-offs.'
+      ],
+      hard: [
+        'Design a scalable solution using SKILL for SCENARIO; detail components and failure handling.',
+        'Optimize a bottleneck in SKILL-heavy service: outline profiling and improvements.',
+        'Deep dive into internals of SKILL: how does FEATURE work under the hood?'
+      ]
+    };
+
+    const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+
+    Object.entries(selectedSkills).forEach(([skill, counts]) => {
+      (['easy', 'medium', 'hard'] as const).forEach(level => {
+        const n = counts[level];
+        for (let i = 0; i < n; i++) {
+          const questionText = pick(templates[level])
+            .replaceAll('SKILL', skill)
+            .replace('KEY', skill === 'React' ? 'component' : 'concept')
+            .replace('ISSUE', 'a performance issue')
+            .replace('PATTERN', 'a common pattern')
+            .replace('ALTERNATIVE', 'an alternative')
+            .replace('SCENARIO', 'high traffic and strict latency')
+            .replace('FEATURE', 'its core feature');
+          generated.push({
+            id: Date.now() + generated.length,
+            question: questionText,
+            category: skill,
+            difficulty: level,
+            estimatedTime: level === 'easy' ? 3 : level === 'medium' ? 5 : 7
+          });
+        }
+      });
+    });
+
+    setQuestions(generated.length > 0 ? generated : sampleQuestions);
+    setIsGenerating(false);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const generateQuestions = async () => {
+    // If user configured skills, use that flow; otherwise fallback samples
+    if (Object.keys(selectedSkills).length > 0) {
+      return generateFromConfig();
+    }
+    setIsGenerating(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
     setQuestions(sampleQuestions);
     setIsGenerating(false);
     setShowSuccess(true);
@@ -127,39 +211,101 @@ const RecruiterPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Technical Questions</h1>
-            <p className="text-gray-600">Configure technical assessment questions for candidates.</p>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <Layers size={18} className="text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Technical Questions</h1>
+              <p className="text-gray-600">Configure technical assessment questions for candidates.</p>
+            </div>
           </div>
-          <button
-            onClick={generateQuestions}
-            disabled={isGenerating}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-              isGenerating 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {isGenerating ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Generating...</span>
-              </>
-            ) : (
-              <>
-                <Bot size={16} />
-                <span>Generate Questions</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={generateQuestions}
+              disabled={isGenerating}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                isGenerating 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {isGenerating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <Bot size={16} />
+                  <span>Generate Questions</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
-        {showSuccess && (
-          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-green-800 flex items-center space-x-2">
-            <CheckCircle size={16} />
-            <span>Questions generated successfully!</span>
+        {/* Config Panel */}
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+          <div className="flex items-center space-x-2 mb-3">
+            <Sliders size={16} className="text-blue-700" />
+            <h3 className="text-blue-900 font-semibold">Configuration</h3>
           </div>
-        )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Skill selector */}
+            <div>
+              <div className="text-sm font-medium text-blue-900 mb-2">Select stack/skills</div>
+              <div className="flex flex-wrap gap-2">
+                {availableSkills.map(skill => {
+                  const active = !!selectedSkills[skill];
+                  return (
+                    <button
+                      key={skill}
+                      onClick={() => toggleSkill(skill)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'
+                      }`}
+                    >
+                      {skill}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Per-skill counts */}
+            <div>
+              <div className="text-sm font-medium text-blue-900 mb-2">Per-skill question counts</div>
+              <div className="space-y-3 max-h-40 overflow-auto pr-2">
+                {Object.entries(selectedSkills).length === 0 && (
+                  <div className="text-xs text-blue-800">Select at least one skill to configure counts.</div>
+                )}
+                {Object.entries(selectedSkills).map(([skill, counts]) => (
+                  <div key={skill} className="bg-white rounded-md border border-blue-100 p-2">
+                    <div className="text-xs font-semibold text-blue-900 mb-2">{skill}</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['easy','medium','hard'] as const).map(level => (
+                        <div key={level} className="flex items-center space-x-2">
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded ${
+                            level==='easy' ? 'bg-green-100 text-green-800' : level==='medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                          }`}>{level}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={20}
+                            value={counts[level]}
+                            onChange={(e) => updateSkillCount(skill, level, parseInt(e.target.value))}
+                            className="w-16 px-2 py-1 border border-blue-200 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Questions List */}
@@ -220,15 +366,17 @@ const RecruiterPage: React.FC = () => {
                           </select>
                         </div>
                         <div>
-                          {/* <label className="block text-sm font-medium text-gray-700 mb-1">Time (minutes)</label>
-                          <input
+                          {/* <label className="block text-sm font-medium text-gray-700 mb-1">Time (minutes)</label> */}
+                          {/* <input
                             type="number"
                             value={editingQuestion.estimatedTime}
                             onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, estimatedTime: parseInt(e.target.value) || 0 } : null)}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             min="1"
-                            max="60" */}
-                          {/* /> */}
+                            max="60"
+                          /> */}
+
+
                         </div>
                       </div>
                     </div>
@@ -261,9 +409,9 @@ const RecruiterPage: React.FC = () => {
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
                             {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
                           </span>
-                          <span className="text-sm text-gray-500">
-                            {/* {question.estimatedTime} min */}
-                          </span>
+                          {/* <span className="text-sm text-gray-500">
+                            {question.estimatedTime} min
+                          </span> */}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 ml-4">
@@ -299,7 +447,7 @@ const RecruiterPage: React.FC = () => {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No technical questions yet</h3>
           <p className="text-gray-600 mb-6">
-            Click "Generate Questions" to create a set of technical assessment questions for candidates.
+            Select skills and levels in the configuration panel, or click "Generate Questions" to use defaults.
           </p>
           <button
             onClick={generateQuestions}
