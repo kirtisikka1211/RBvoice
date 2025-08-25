@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, User, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { Home, User, ChevronLeft, ChevronRight, LogOut, FileText, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
@@ -68,6 +68,27 @@ const Layout: React.FC<LayoutProps> = ({ children, userEmail, onLogout }) => {
               <Home size={16} />
               {!isCollapsed && <span className="text-sm font-medium ml-2">Home</span>}
             </button>
+            
+            {/* Recruiter Navigation Items */}
+            <div className="space-y-1">
+              <button
+                onClick={() => navigate('/recruiter')}
+                className="w-full flex items-center px-2 py-1.5 rounded text-white hover:bg-white/10 transition-colors"
+                title="Technical Questions"
+              >
+                <FileText size={16} />
+                {!isCollapsed && <span className="text-sm ml-2">Technical Questions</span>}
+              </button>
+              <button
+                onClick={() => navigate('/pre-screen-recruiter')}
+                className="w-full flex items-center px-2 py-1.5 rounded text-white hover:bg-white/10 transition-colors"
+                title="Pre-Screen Questions"
+              >
+                <Mic size={16} />
+                {!isCollapsed && <span className="text-sm ml-2">Pre-Screen Questions</span>}
+              </button>
+            </div>
+            
             {/* Inactive Navigation Item */}
             <div className="flex items-center px-2 py-1.5 rounded text-white hover:bg-white/10 transition-colors cursor-pointer">
               <User size={16} />

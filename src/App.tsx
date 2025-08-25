@@ -7,6 +7,8 @@ import IdlePage from './components/IdlePage';
 import PreparingPage from './components/PreparingPage';
 import InterviewPage from './components/InterviewPage';
 import CompletedPage from './components/CompletedPage';
+import RecruiterPage from './components/RecruiterPage';
+import PreScreenRecruiterPage from './components/PreScreenRecruiterPage';
 
 interface InterviewScript {
   questions?: Array<{
@@ -236,6 +238,34 @@ function App() {
                     onReset={handleReset}
                     onUpdateScript={handleUpdateScript}
                   />
+                </Layout>
+              )
+            } 
+          />
+
+          {/* Recruiter Route */}
+          <Route 
+            path="/recruiter" 
+            element={
+              !userEmail ? (
+                <Navigate to="/login" replace />
+              ) : (
+                <Layout userEmail={userEmail} onLogout={handleLogout}>
+                  <RecruiterPage />
+                </Layout>
+              )
+            } 
+          />
+
+          {/* Pre-Screen Recruiter Route */}
+          <Route 
+            path="/pre-screen-recruiter" 
+            element={
+              !userEmail ? (
+                <Navigate to="/login" replace />
+              ) : (
+                <Layout userEmail={userEmail} onLogout={handleLogout}>
+                  <PreScreenRecruiterPage />
                 </Layout>
               )
             } 
