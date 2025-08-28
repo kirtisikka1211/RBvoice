@@ -185,23 +185,25 @@ const RecruiterPage: React.FC = () => {
   };
 
   const getDifficultyColor = (difficulty: string) => {
+    // Standardize to blue/white theme across difficulty levels
     switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Beginner': return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'Intermediate': return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'Advanced': return 'bg-blue-200 text-blue-900 border border-blue-300';
+      default: return 'bg-blue-50 text-blue-700 border border-blue-200';
     }
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = [
-      'bg-blue-100 text-blue-800',
-      'bg-purple-100 text-purple-800',
-      'bg-indigo-100 text-indigo-800',
-      'bg-pink-100 text-pink-800',
-      'bg-orange-100 text-orange-800'
+    // Keep categories within blue palette for consistency
+    const blueVariants = [
+      'bg-blue-50 text-blue-700 border border-blue-200',
+      'bg-blue-100 text-blue-800 border border-blue-200',
+      'bg-blue-200 text-blue-900 border border-blue-300',
+      'bg-blue-50 text-blue-700 border border-blue-200',
+      'bg-blue-100 text-blue-800 border border-blue-200'
     ];
-    return colors[Math.abs(category.length) % colors.length];
+    return blueVariants[Math.abs(category.length) % blueVariants.length];
   };
 
   return (
@@ -285,7 +287,7 @@ const RecruiterPage: React.FC = () => {
                       {(['Beginner','Intermediate','Advanced'] as const).map(level => (
                         <div key={level} className="flex items-center space-x-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded ${
-                            level==='Beginner' ? 'bg-green-100 text-green-800' : level==='Intermediate' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                            level==='Beginner' ? 'bg-blue-50 text-blue-700 border border-blue-200' : level==='Intermediate' ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-blue-200 text-blue-900 border border-blue-300'
                           }`}>{level}</span>
                           <input
                             type="number"
@@ -359,7 +361,7 @@ const RecruiterPage: React.FC = () => {
               </h2>
               <button
                 onClick={addNewQuestion}
-                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-Intermediate transition-colors flex items-center space-x-2"
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-Intermediate transition-colors flex items-center space-x-2"
               >
                 <Plus size={16} />
                 <span>Add Question</span>
