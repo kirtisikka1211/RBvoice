@@ -6,7 +6,6 @@ import {
   Trash2, 
   FileText,
   Bot,
-  CheckCircle,
   Sliders,
   Layers
 } from 'lucide-react';
@@ -15,23 +14,23 @@ interface TechnicalQuestion {
   id: number;
   question: string;
   category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'Beginner' | 'Intermediate' | 'hard';
   estimatedTime: number; // in minutes
   isFollowUp?: boolean;
 }
 
-type SkillLevelCounts = { easy: number; medium: number; hard: number };
+type SkillLevelCounts = { Beginner: number; Intermediate: number; hard: number };
 
 const RecruiterPage: React.FC = () => {
   const [questions, setQuestions] = useState<TechnicalQuestion[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<TechnicalQuestion | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // Configuration state
   const availableSkills = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'NoSQL', 'System Design'];
   const [selectedSkills, setSelectedSkills] = useState<Record<string, SkillLevelCounts>>({});
   const [enableFollowUps, setEnableFollowUps] = useState<boolean>(false);
+  const [enableResumeQuestions, setEnableResumeQuestions] = useState<boolean>(false);
 
   // Sample technical questions for demonstration / fallback
   const sampleQuestions: TechnicalQuestion[] = [
@@ -39,14 +38,14 @@ const RecruiterPage: React.FC = () => {
       id: 1,
       question: "Explain the difference between synchronous and asynchronous code in JavaScript and when you'd use each.",
       category: "JavaScript",
-      difficulty: "medium",
+      difficulty: "Intermediate",
       estimatedTime: 5
     },
     {
       id: 2,
       question: "What is a closure in JavaScript? Provide a practical use case.",
       category: "JavaScript",
-      difficulty: "medium",
+      difficulty: "Intermediate",
       estimatedTime: 4
     },
     {
@@ -60,7 +59,7 @@ const RecruiterPage: React.FC = () => {
       id: 4,
       question: "Describe how you would design a REST API for a todo app. Include key endpoints and status codes.",
       category: "Backend",
-      difficulty: "medium",
+      difficulty: "Intermediate",
       estimatedTime: 5
     },
     {
@@ -78,7 +77,7 @@ const RecruiterPage: React.FC = () => {
       if (copy[skill]) {
         delete copy[skill];
       } else {
-        copy[skill] = { easy: 1, medium: 2, hard: 1 };
+        copy[skill] = { Beginner: 1, Intermediate: 2, hard: 1 };
       }
       return copy;
     });
@@ -97,13 +96,13 @@ const RecruiterPage: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1200));
 
     const generated: TechnicalQuestion[] = [];
-    const templates: Record<'easy' | 'medium' | 'hard', string[]> = {
-      easy: [
+    const templates: Record<'Beginner' | 'Intermediate' | 'hard', string[]> = {
+      Beginner: [
         'Define KEY in SKILL and give a simple example.',
         'What problem does SKILL solve? Provide a one-line explanation.',
         'Name two common use-cases for SKILL.'
       ],
-      medium: [
+      Intermediate: [
         'How would you debug ISSUE related to SKILL in a live app?',
         'Explain PATTERN in SKILL and when to apply it.',
         'Compare SKILL with ALTERNATIVE and discuss trade-offs.'
@@ -118,11 +117,11 @@ const RecruiterPage: React.FC = () => {
     const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
     Object.entries(selectedSkills).forEach(([skill, counts]) => {
-      (['easy', 'medium', 'hard'] as const).forEach(level => {
+      (['Beginner', 'Intermediate', 'hard'] as const).forEach(level => {
         const n = counts[level];
         for (let i = 0; i < n; i++) {
           const questionText = pick(templates[level])
-            .replaceAll('SKILL', skill)
+            .replace(/SKILL/g, skill)
             .replace('KEY', skill === 'React' ? 'component' : 'concept')
             .replace('ISSUE', 'a performance issue')
             .replace('PATTERN', 'a common pattern')
@@ -134,12 +133,12 @@ const RecruiterPage: React.FC = () => {
             question: questionText,
             category: skill,
             difficulty: level,
-            estimatedTime: level === 'easy' ? 3 : level === 'medium' ? 5 : 7
+            estimatedTime: level === 'Beginner' ? 3 : level === 'Intermediate' ? 5 : 7
           };
           generated.push(base);
 
           if (enableFollowUps) {
-            const bump = (lvl: 'easy'|'medium'|'hard'): 'easy'|'medium'|'hard' => lvl === 'easy' ? 'medium' : lvl === 'medium' ? 'hard' : 'hard';
+            const bump = (lvl: 'Beginner'|'Intermediate'|'hard'): 'Beginner'|'Intermediate'|'hard' => lvl === 'Beginner' ? 'Intermediate' : lvl === 'Intermediate' ? 'hard' : 'hard';
             generated.push({
               id: Date.now() + generated.length + 10000,
               question: base.question + ' What trade-offs would you consider? Provide a deeper explanation.',
@@ -155,8 +154,6 @@ const RecruiterPage: React.FC = () => {
 
     setQuestions(generated.length > 0 ? generated : sampleQuestions);
     setIsGenerating(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   const generateQuestions = async () => {
@@ -168,8 +165,6 @@ const RecruiterPage: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     setQuestions(sampleQuestions);
     setIsGenerating(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   const startEditing = (question: TechnicalQuestion) => {
@@ -194,7 +189,7 @@ const RecruiterPage: React.FC = () => {
       id: Date.now(),
       question: "New technical question...",
       category: "General",
-      difficulty: "medium",
+      difficulty: "Intermediate",
       estimatedTime: 5
     };
     setQuestions(prev => [...prev, newQuestion]);
@@ -203,8 +198,8 @@ const RecruiterPage: React.FC = () => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'Beginner': return 'bg-green-100 text-green-800';
+      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
       case 'hard': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -239,7 +234,7 @@ const RecruiterPage: React.FC = () => {
             <button
               onClick={generateQuestions}
               disabled={isGenerating}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+              className={`px-4 py-2 rounded-lg font-Intermediate transition-colors flex items-center space-x-2 ${
                 isGenerating 
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -269,7 +264,7 @@ const RecruiterPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Skill selector */}
             <div>
-              <div className="text-sm font-medium text-blue-900 mb-2">Select stack/skills</div>
+              <div className="text-sm font-Intermediate text-blue-900 mb-2">Select stack/skills</div>
               <div className="flex flex-wrap gap-2">
                 {availableSkills.map(skill => {
                   const active = !!selectedSkills[skill];
@@ -277,7 +272,7 @@ const RecruiterPage: React.FC = () => {
                     <button
                       key={skill}
                       onClick={() => toggleSkill(skill)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-Intermediate border transition-colors ${
                         active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'
                       }`}
                     >
@@ -290,7 +285,7 @@ const RecruiterPage: React.FC = () => {
 
             {/* Per-skill counts */}
             <div>
-              <div className="text-sm font-medium text-blue-900 mb-2">Per-skill question counts</div>
+              <div className="text-sm font-Intermediate text-blue-900 mb-2">Per-skill question counts</div>
               <div className="space-y-3 max-h-40 overflow-auto pr-2">
                 {Object.entries(selectedSkills).length === 0 && (
                   <div className="text-xs text-blue-800">Select at least one skill to configure counts.</div>
@@ -299,10 +294,10 @@ const RecruiterPage: React.FC = () => {
                   <div key={skill} className="bg-white rounded-md border border-blue-100 p-2">
                     <div className="text-xs font-semibold text-blue-900 mb-2">{skill}</div>
                     <div className="grid grid-cols-3 gap-2">
-                      {(['easy','medium','hard'] as const).map(level => (
+                      {(['Beginner','Intermediate','hard'] as const).map(level => (
                         <div key={level} className="flex items-center space-x-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded ${
-                            level==='easy' ? 'bg-green-100 text-green-800' : level==='medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                            level==='Beginner' ? 'bg-green-100 text-green-800' : level==='Intermediate' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
                           }`}>{level}</span>
                           <input
                             type="number"
@@ -321,8 +316,29 @@ const RecruiterPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Full-width follow-ups row */}
+          {/* Resume-based questions toggle */}
           <div className="mt-4">
+            <div className="w-full bg-white border border-blue-100 rounded-lg p-3">
+              <div className="flex items-center">
+                <input
+                  id="enable-resume"
+                  type="checkbox"
+                  checked={enableResumeQuestions}
+                  onChange={(e) => setEnableResumeQuestions(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded"
+                />
+                <label htmlFor="enable-resume" className="ml-2 text-sm font-Intermediate text-blue-900">
+                  Enable resume-based questions
+                </label>
+                <span className="ml-3 text-[11px] text-blue-800">
+                  Tailor questions based on the candidate's resume highlights.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Follow-up questions toggle */}
+          <div className="mt-2">
             <div className="w-full bg-white border border-blue-100 rounded-lg p-3">
               <div className="flex items-center">
                 <input
@@ -332,7 +348,7 @@ const RecruiterPage: React.FC = () => {
                   onChange={(e) => setEnableFollowUps(e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded"
                 />
-                <label htmlFor="enable-followups" className="ml-2 text-sm font-medium text-blue-900">
+                <label htmlFor="enable-followups" className="ml-2 text-sm font-Intermediate text-blue-900">
                   Enable follow-up questions
                 </label>
                 <span className="ml-3 text-[11px] text-blue-800">
@@ -354,7 +370,7 @@ const RecruiterPage: React.FC = () => {
               </h2>
               <button
                 onClick={addNewQuestion}
-                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-Intermediate transition-colors flex items-center space-x-2"
               >
                 <Plus size={16} />
                 <span>Add Question</span>
@@ -370,7 +386,7 @@ const RecruiterPage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
+                        <label className="block text-sm font-Intermediate text-gray-700 mb-1">Question</label>
                         <textarea
                           value={editingQuestion.question}
                           onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, question: e.target.value } : null)}
@@ -379,7 +395,7 @@ const RecruiterPage: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <label className="block text-sm font-Intermediate text-gray-700 mb-1">Category</label>
                         <input
                           type="text"
                           value={editingQuestion.category}
@@ -390,19 +406,19 @@ const RecruiterPage: React.FC = () => {
                       </div>
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                          <label className="block text-sm font-Intermediate text-gray-700 mb-1">Difficulty</label>
                           <select
                             value={editingQuestion.difficulty}
-                            onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, difficulty: e.target.value as 'easy' | 'medium' | 'hard' } : null)}
+                            onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, difficulty: e.target.value as 'Beginner' | 'Intermediate' | 'hard' } : null)}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           >
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="hard">Advanced</option>
                           </select>
                         </div>
                         <div>
-                          {/* <label className="block text-sm font-medium text-gray-700 mb-1">Time (minutes)</label> */}
+                          {/* <label className="block text-sm font-Intermediate text-gray-700 mb-1">Time (minutes)</label> */}
                           {/* <input
                             type="number"
                             value={editingQuestion.estimatedTime}
@@ -419,7 +435,7 @@ const RecruiterPage: React.FC = () => {
                     <div className="flex space-x-3">
                       <button
                         onClick={saveQuestion}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-Intermediate transition-colors flex items-center space-x-2"
                       >
                         <Save size={16} />
                         <span>Save Changes</span>
@@ -437,16 +453,16 @@ const RecruiterPage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-gray-900 font-medium mb-2">{question.question}</p>
+                        <p className="text-gray-900 font-Intermediate mb-2">{question.question}</p>
                         <div className="flex items-center space-x-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(question.category)}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-Intermediate ${getCategoryColor(question.category)}`}>
                             {question.category}
                           </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-Intermediate ${getDifficultyColor(question.difficulty)}`}>
                             {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
                           </span>
                           {question.isFollowUp && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            <span className="px-2 py-1 rounded-full text-xs font-Intermediate bg-blue-50 text-blue-700 border border-blue-200">
                               Follow-up
                             </span>
                           )}
@@ -486,13 +502,13 @@ const RecruiterPage: React.FC = () => {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FileText size={32} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No technical questions yet</h3>
+          <h3 className="text-lg font-Intermediate text-gray-900 mb-2">No technical questions yet</h3>
           <p className="text-gray-600 mb-6">
             Select skills and levels in the configuration panel, or click "Generate Questions" to use defaults.
           </p>
           <button
             onClick={generateQuestions}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2 mx-auto"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-Intermediate transition-colors flex items-center space-x-2 mx-auto"
           >
             <Bot size={16} />
             <span>Generate Questions</span>

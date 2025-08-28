@@ -4,8 +4,6 @@ import {
   Edit3, 
   Save, 
   Trash2, 
-  FileText,
-  Bot,
   CheckCircle,
   Mic
 } from 'lucide-react';
@@ -13,9 +11,10 @@ import {
 interface PreScreenQuestion {
   id: number;
   question: string;
-  category: string;
-  type: 'behavioral' | 'technical' | 'situational' | 'general';
+
+
   estimatedTime: number; // in minutes
+  expectedAnswer: string;
 }
 
 const PreScreenRecruiterPage: React.FC = () => {
@@ -24,42 +23,42 @@ const PreScreenRecruiterPage: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<PreScreenQuestion | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Sample pre-screen questions for demonstration
+  // Sample pre-screen questions (HR-focused) for demonstration
   const sampleQuestions: PreScreenQuestion[] = [
     {
       id: 1,
-      question: "Tell me about yourself and your professional background.",
-      category: "Introduction",
-      type: "general",
-      estimatedTime: 3
+      question: "What is your expected CTC (total annual compensation)?",
+
+      estimatedTime: 2,
+      expectedAnswer: "A clear range or figure (e.g., 16–20 LPA) with flexibility notes if any."
     },
     {
       id: 2,
-      question: "What interests you most about this position and our company?",
-      category: "Motivation",
-      type: "behavioral",
-      estimatedTime: 4
+      question: "What is your preferred work location?",
+
+      estimatedTime: 2,
+      expectedAnswer: "Specific city/region preference; mention multiple acceptable locations if applicable."
     },
     {
       id: 3,
-      question: "Describe a challenging project you've worked on recently and how you overcame obstacles.",
-      category: "Problem Solving",
-      type: "situational",
-      estimatedTime: 5
+      question: "What work mode do you prefer (Remote / Hybrid / WFO)?",
+    
+      estimatedTime: 2,
+      expectedAnswer: "One of Remote/Hybrid/WFO; if Hybrid/WFO, include onsite days or commute constraints."
     },
     {
       id: 4,
-      question: "How do you handle working under pressure and tight deadlines?",
-      category: "Work Style",
-      type: "behavioral",
-      estimatedTime: 4
+      question: "Are you open to relocation if required?",
+
+      estimatedTime: 2,
+      expectedAnswer: "Yes/No; if yes, specify cities; if no, provide constraints or required support."
     },
     {
       id: 5,
-      question: "Where do you see yourself professionally in the next 3-5 years?",
-      category: "Career Goals",
-      type: "general",
-      estimatedTime: 3
+      question: "What is your notice period and earliest joining date?",
+   
+      estimatedTime: 2,
+      expectedAnswer: "Exact notice period (e.g., 30/60/90 days) and any buyout/negotiation possibilities."
     }
   ];
 
@@ -95,35 +94,17 @@ const PreScreenRecruiterPage: React.FC = () => {
     const newQuestion: PreScreenQuestion = {
       id: Date.now(),
       question: "New pre-screen question...",
-      category: "General",
-      type: "general",
-      estimatedTime: 3
+
+      estimatedTime: 3,
+      expectedAnswer: "Expected answer guidance..."
     };
     setQuestions(prev => [...prev, newQuestion]);
     setEditingQuestion(newQuestion);
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'behavioral': return 'bg-blue-100 text-blue-800';
-      case 'technical': return 'bg-purple-100 text-purple-800';
-      case 'situational': return 'bg-orange-100 text-orange-800';
-      case 'general': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Removed type pill; keeping category badge only
 
-  const getCategoryColor = (category: string) => {
-    const colors = [
-      'bg-indigo-100 text-indigo-800',
-      'bg-pink-100 text-pink-800',
-      'bg-yellow-100 text-yellow-800',
-      'bg-teal-100 text-teal-800',
-      'bg-red-100 text-red-800'
-    ];
-    return colors[Math.abs(category.length) % colors.length];
-  };
-
+  
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
@@ -198,29 +179,10 @@ const PreScreenRecruiterPage: React.FC = () => {
                           placeholder="Enter your question..."
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <input
-                          type="text"
-                          value={editingQuestion.category}
-                          onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, category: e.target.value } : null)}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="e.g., Introduction, Motivation"
-                        />
-                      </div>
+                     
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Question Type</label>
-                          <select
-                            value={editingQuestion.type}
-                            onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, type: e.target.value as 'behavioral' | 'technical' | 'situational' | 'general' } : null)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="general">General</option>
-                            <option value="behavioral">Behavioral</option>
-                            <option value="technical">Technical</option>
-                            <option value="situational">Situational</option>
-                          </select>
+                          {/* Reserved for future fields if needed */}
                         </div>
                         <div>
                           {/* <label className="block text-sm font-medium text-gray-700 mb-1">Time (minutes)</label>
@@ -234,6 +196,15 @@ const PreScreenRecruiterPage: React.FC = () => {
                           /> */}
                         </div>
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Expected Answer</label>
+                      <textarea
+                        value={editingQuestion.expectedAnswer}
+                        onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, expectedAnswer: e.target.value } : null)}
+                        className="w-full h-28 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        placeholder="Guidance for a strong expected answer..."
+                      />
                     </div>
                     <div className="flex space-x-3">
                       <button
@@ -258,15 +229,16 @@ const PreScreenRecruiterPage: React.FC = () => {
                       <div className="flex-1">
                         <p className="text-gray-900 font-medium mb-2">{question.question}</p>
                         <div className="flex items-center space-x-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(question.category)}`}>
-                            {question.category}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(question.type)}`}>
-                            {question.type.charAt(0).toUpperCase() + question.type.slice(1)}
-                          </span>
+                 
                           {/* <span className="text-sm text-gray-500">
                             {question.estimatedTime} min
                           </span> */}
+                        </div>
+                        <div className="mt-3">
+                          <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">Expected answer</div>
+                          <div className="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-md p-3 whitespace-pre-wrap">
+                            {question.expectedAnswer}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 ml-4">
