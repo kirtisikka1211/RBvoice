@@ -14,12 +14,12 @@ interface TechnicalQuestion {
   id: number;
   question: string;
   category: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'hard';
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   estimatedTime: number; // in minutes
   isFollowUp?: boolean;
 }
 
-type SkillLevelCounts = { Beginner: number; Intermediate: number; hard: number };
+type SkillLevelCounts = { Beginner: number; Intermediate: number; Advanced: number };
 
 const RecruiterPage: React.FC = () => {
   const [questions, setQuestions] = useState<TechnicalQuestion[]>([]);
@@ -52,7 +52,7 @@ const RecruiterPage: React.FC = () => {
       id: 3,
       question: "How would you optimize a React application that re-renders too frequently?",
       category: "React",
-      difficulty: "hard",
+      difficulty: "Advanced",
       estimatedTime: 6
     },
     {
@@ -66,7 +66,7 @@ const RecruiterPage: React.FC = () => {
       id: 5,
       question: "You're given a slow SQL query. What steps would you take to diagnose and improve its performance?",
       category: "Database",
-      difficulty: "hard",
+      difficulty: "Advanced",
       estimatedTime: 7
     }
   ];
@@ -77,7 +77,7 @@ const RecruiterPage: React.FC = () => {
       if (copy[skill]) {
         delete copy[skill];
       } else {
-        copy[skill] = { Beginner: 1, Intermediate: 2, hard: 1 };
+        copy[skill] = { Beginner: 1, Intermediate: 2, Advanced: 1 };
       }
       return copy;
     });
@@ -96,7 +96,7 @@ const RecruiterPage: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1200));
 
     const generated: TechnicalQuestion[] = [];
-    const templates: Record<'Beginner' | 'Intermediate' | 'hard', string[]> = {
+    const templates: Record<'Beginner' | 'Intermediate' | 'Advanced', string[]> = {
       Beginner: [
         'Define KEY in SKILL and give a simple example.',
         'What problem does SKILL solve? Provide a one-line explanation.',
@@ -107,7 +107,7 @@ const RecruiterPage: React.FC = () => {
         'Explain PATTERN in SKILL and when to apply it.',
         'Compare SKILL with ALTERNATIVE and discuss trade-offs.'
       ],
-      hard: [
+      Advanced: [
         'Design a scalable solution using SKILL for SCENARIO; detail components and failure handling.',
         'Optimize a bottleneck in SKILL-heavy service: outline profiling and improvements.',
         'Deep dive into internals of SKILL: how does FEATURE work under the hood?'
@@ -117,7 +117,7 @@ const RecruiterPage: React.FC = () => {
     const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
     Object.entries(selectedSkills).forEach(([skill, counts]) => {
-      (['Beginner', 'Intermediate', 'hard'] as const).forEach(level => {
+      (['Beginner', 'Intermediate', 'Advanced'] as const).forEach(level => {
         const n = counts[level];
         for (let i = 0; i < n; i++) {
           const questionText = pick(templates[level])
@@ -136,18 +136,6 @@ const RecruiterPage: React.FC = () => {
             estimatedTime: level === 'Beginner' ? 3 : level === 'Intermediate' ? 5 : 7
           };
           generated.push(base);
-
-          if (enableFollowUps) {
-            const bump = (lvl: 'Beginner'|'Intermediate'|'hard'): 'Beginner'|'Intermediate'|'hard' => lvl === 'Beginner' ? 'Intermediate' : lvl === 'Intermediate' ? 'hard' : 'hard';
-            generated.push({
-              id: Date.now() + generated.length + 10000,
-              question: base.question + ' What trade-offs would you consider? Provide a deeper explanation.',
-              category: base.category,
-              difficulty: bump(base.difficulty),
-              estimatedTime: base.estimatedTime + 2,
-              isFollowUp: true
-            });
-          }
         }
       });
     });
@@ -200,7 +188,7 @@ const RecruiterPage: React.FC = () => {
     switch (difficulty) {
       case 'Beginner': return 'bg-green-100 text-green-800';
       case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'hard': return 'bg-red-100 text-red-800';
+      case 'Advanced': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -294,7 +282,7 @@ const RecruiterPage: React.FC = () => {
                   <div key={skill} className="bg-white rounded-md border border-blue-100 p-2">
                     <div className="text-xs font-semibold text-blue-900 mb-2">{skill}</div>
                     <div className="grid grid-cols-3 gap-2">
-                      {(['Beginner','Intermediate','hard'] as const).map(level => (
+                      {(['Beginner','Intermediate','Advanced'] as const).map(level => (
                         <div key={level} className="flex items-center space-x-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded ${
                             level==='Beginner' ? 'bg-green-100 text-green-800' : level==='Intermediate' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
@@ -345,6 +333,7 @@ const RecruiterPage: React.FC = () => {
                   id="enable-followups"
                   type="checkbox"
                   checked={enableFollowUps}
+          
                   onChange={(e) => setEnableFollowUps(e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded"
                 />
@@ -409,12 +398,12 @@ const RecruiterPage: React.FC = () => {
                           <label className="block text-sm font-Intermediate text-gray-700 mb-1">Difficulty</label>
                           <select
                             value={editingQuestion.difficulty}
-                            onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, difficulty: e.target.value as 'Beginner' | 'Intermediate' | 'hard' } : null)}
+                            onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, difficulty: e.target.value as 'Beginner' | 'Intermediate' | 'Advanced' } : null)}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           >
                             <option value="Beginner">Beginner</option>
                             <option value="Intermediate">Intermediate</option>
-                            <option value="hard">Advanced</option>
+                            <option value="Advanced">Advanced</option>
                           </select>
                         </div>
                         <div>
@@ -461,11 +450,7 @@ const RecruiterPage: React.FC = () => {
                           <span className={`px-2 py-1 rounded-full text-xs font-Intermediate ${getDifficultyColor(question.difficulty)}`}>
                             {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
                           </span>
-                          {question.isFollowUp && (
-                            <span className="px-2 py-1 rounded-full text-xs font-Intermediate bg-blue-50 text-blue-700 border border-blue-200">
-                              Follow-up
-                            </span>
-                          )}
+                          {/* Follow-up tag removed as follow-ups are no longer auto-generated */}
                           {/* <span className="text-sm text-gray-500">
                             {question.estimatedTime} min
                           </span> */}
