@@ -307,7 +307,7 @@ const RecruiterPage: React.FC = () => {
           </div>
 
           {/* Resume-based questions toggle */}
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <div className="w-full bg-white border border-blue-100 rounded-lg p-3">
               <div className="flex items-center">
                 <input
@@ -325,7 +325,7 @@ const RecruiterPage: React.FC = () => {
                 </span>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Follow-up questions toggle */}
           <div className="mt-2">
